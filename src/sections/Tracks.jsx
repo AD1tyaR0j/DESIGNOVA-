@@ -43,8 +43,20 @@ function TrackCard({ track, i, stage }) {
             <h3 className="font-display text-2xl font-bold uppercase leading-tight text-ink sm:text-3xl" style={{ fontStretch: '85%' }}>
               {track.title}
             </h3>
+            {track.stone && (
+              <p className="mt-1 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-gamma/70">{track.stone}</p>
+            )}
             <p className="mt-2 leading-relaxed text-ink/85">{track.text}</p>
-            <p className="track-meter mt-5 flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-accent-text" aria-hidden="true">
+            {track.tags && track.tags.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {track.tags.map(tag => (
+                  <span key={tag} className="rounded border border-gamma/30 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-widest text-gamma/80">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="track-meter mt-4 flex items-center gap-2 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-accent-text" aria-hidden="true">
               Charge
               <span className="relative h-1.5 flex-1 overflow-hidden bg-white/10">
                 <span className="track-meter-fill absolute inset-y-0 left-0 w-full origin-left bg-gamma" />
@@ -68,7 +80,7 @@ export default function Tracks({ stage, index }) {
       provisional={!confirmed.tracks}
       intro="Pick a track, define the user, and design the transformation. Problem statements are revealed at the opening ceremony."
     >
-      <ul className="grid gap-5 md:grid-cols-2">
+      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {tracks.map((t, i) => (
           <TrackCard key={t.code} track={t} i={i} stage={stage} />
         ))}

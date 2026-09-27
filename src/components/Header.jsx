@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { event, nav } from '../data/event';
+import { event, media, nav } from '../data/event';
 import { subscribe } from '../lib/rage';
-import { prefersReducedMotion, setMotion } from '../lib/motion';
 import { audioAvailable, setMuted, useMuted } from '../lib/audio';
+import { Picture } from './Img';
 import RegisterButton from './RegisterButton';
 
 /** Scroll-progress bar styled as a gamma energy meter with a live readout. */
@@ -48,28 +48,6 @@ function SoundToggle() {
         <path d="M4 9h4l5-4v14l-5-4H4z" />
         {muted ? <path d="M17 9l5 6M22 9l-5 6" /> : <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />}
       </svg>
-    </button>
-  );
-}
-
-/** Animations on/off — overrides the device's reduced-motion setting for this browser. */
-function MotionToggle() {
-  const on = !prefersReducedMotion();
-  return (
-    <button
-      type="button"
-      onClick={() => setMotion(!on)}
-      aria-pressed={on}
-      title={on ? 'Turn animations off' : 'Turn animations on'}
-      className={`flex h-11 items-center gap-2 border px-3 font-mono text-[0.7rem] uppercase tracking-[0.14em] ${
-        on ? 'border-accent/50 text-accent-text hover:bg-accent/15' : 'border-gamma text-gamma hover:bg-gamma/10'
-      }`}
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <path d="M13 3L5 14h6l-1 7 8-11h-6z" />
-        {!on && <path d="M3 3l18 18" />}
-      </svg>
-      <span className="sr-only xs:not-sr-only">Animations {on ? 'on' : 'off'}</span>
     </button>
   );
 }
@@ -134,12 +112,38 @@ export default function Header() {
       style={{ WebkitBackdropFilter: scrolled || open ? 'blur(12px)' : undefined }}
     >
       <div className="container-site flex h-16 items-center justify-between gap-3">
-        <a href="#top" className="flex items-baseline gap-2">
-          <span className="font-display text-xl font-extrabold uppercase tracking-wide text-ink" style={{ fontStretch: '85%' }}>
-            {event.name}
-          </span>{' '}
-          <span className="font-mono text-xs text-accent-text">{event.year}</span>
-          <span className="sr-only"> — back to top</span>
+        <a href="#top" className="group nav-logo-wrap flex items-center gap-2.5 py-1" aria-label={`${event.name} ${event.year} — back to top`}>
+          {/* Ambient energy aura */}
+          <span
+            className="pointer-events-none absolute -inset-x-2 -inset-y-1 rounded-full opacity-60 blur-md transition-opacity duration-300 group-hover:opacity-100"
+            style={{
+              background: 'radial-gradient(ellipse at center, rgba(57, 255, 20, 0.45), rgba(124, 255, 0, 0.18) 50%, transparent 75%)',
+            }}
+            aria-hidden="true"
+          />
+
+          {/* Logo container with pulse & shimmer */}
+          <span className="relative flex h-8 sm:h-9 w-auto items-center overflow-hidden">
+            <Picture
+              src={media.logo}
+              alt={event.name}
+              width="240"
+              height="72"
+              eager
+              className="nav-logo-img h-full w-auto max-w-[140px] sm:max-w-[170px] object-contain transition-transform duration-300 group-hover:scale-105"
+              fallback={
+                <span className="font-display text-xl font-extrabold uppercase tracking-wide text-ink" style={{ fontStretch: '85%' }}>
+                  {event.name}
+                </span>
+              }
+            />
+            <span className="nav-logo-shimmer" aria-hidden="true" />
+          </span>
+
+          {/* 2026 Year tag */}
+          <span className="relative rounded border border-gamma/40 bg-gamma/10 px-1.5 py-0.5 font-mono text-[0.65rem] font-bold tracking-widest text-gamma shadow-[0_0_8px_rgba(57,255,20,0.3)] transition-all duration-300 group-hover:border-gamma group-hover:bg-gamma group-hover:text-void group-hover:shadow-[0_0_12px_#39FF14]">
+            {event.year}
+          </span>
         </a>
 
         <nav aria-label="Primary" className="hidden xl:block">
@@ -157,7 +161,6 @@ export default function Header() {
 
         <div className="flex items-center gap-2">
           <GammaMeter />
-          <MotionToggle />
           <SoundToggle />
           <RegisterButton compact className="hidden sm:inline-flex" />
           <button

@@ -5,8 +5,8 @@ import HudFrame from '../components/HudFrame';
 
 const TIER = {
   gold: { color: '#7CFF00', label: 'Gamma tier' },
-  silver: { color: '#4FC3F7', label: 'Cyan tier' },
-  bronze: { color: '#C9A0FF', label: 'Volt tier' },
+  silver: { color: '#39FF14', label: 'Apex tier' },
+  bronze: { color: '#A3FF2E', label: 'Titan tier' },
 };
 
 /** Fist-impact crater: concentric rings + radial fractures (original SVG). */
@@ -65,7 +65,12 @@ export default function Prizes({ stage, index }) {
                   </span>
                   <span className="mt-2 block text-xl sm:text-2xl">{p.title}</span>
                 </h3>
-                <p className="mt-4 font-mono text-sm text-ink/90">{p.reward}</p>
+                <p
+                  className={`mt-4 font-display font-black tabular-nums leading-none ${first ? 'text-5xl sm:text-6xl' : 'text-4xl sm:text-5xl'}`}
+                  style={{ color: tier.color, textShadow: `0 0 28px ${tier.color}88` }}
+                >
+                  {p.reward}
+                </p>
               </HudFrame>
             </m.li>
           );

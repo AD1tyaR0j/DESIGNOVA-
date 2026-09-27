@@ -64,7 +64,7 @@ export default function Judging({ stage, index }) {
         .power-fill {
           background:
             repeating-linear-gradient(90deg, transparent 0 10px, rgb(5 5 5 / .85) 10px 13px),
-            linear-gradient(90deg, #A020F0, #7CFF00);
+            linear-gradient(90deg, #1b5e20, #39FF14, #7CFF00);
           box-shadow: 0 0 14px rgb(57 255 20 / .45);
         }
       `}</style>

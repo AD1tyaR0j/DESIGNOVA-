@@ -12,13 +12,13 @@
    ========================================================================== */
 
 export const confirmed = {
-  date: false, // TODO confirm
-  teamSize: false, // TODO confirm
-  tracks: false, // TODO confirm
-  prizes: false, // TODO confirm
-  schedule: false, // TODO confirm
+  date: true,
+  teamSize: true,
+  tracks: true,
+  prizes: true,
+  schedule: true,
   judging: false, // TODO confirm
-  committee: false, // TODO confirm
+  committee: true,
   faqs: false, // TODO confirm
 };
 
@@ -34,20 +34,20 @@ export const event = {
 
   // Times are ISO 8601 with the IST offset (+05:30). The countdown, the LIVE /
   // COMPLETE badges and the schedule "NOW" marker are all driven by these.
-  start: '2026-11-14T10:00:00+05:30', // TODO confirm
-  end: '2026-11-14T18:00:00+05:30', // TODO confirm
-  reportingTime: '09:00 IST', // TODO confirm
-  dateLabel: '14 November 2026', // TODO confirm — shown on the hero
-  timeLabel: '10:00 – 18:00 IST', // TODO confirm
+  start: '2026-09-28T14:00:00+05:30',
+  end: '2026-09-28T18:00:00+05:30',
+  reportingTime: '14:00 IST',
+  dateLabel: '28 September 2026',
+  timeLabel: '14:00 – 18:00 IST',
 
-  teamSize: { min: 2, max: 4, label: '2–4 members' }, // TODO confirm
-  durationHours: 8, // TODO confirm (end − start)
+  teamSize: { min: 2, max: 3, label: '2–3 members' },
+  durationHours: 4,
   fee: 'To Be Announced', // TODO confirm — e.g. 'Free' or '₹200 per team'
 
   registration: {
     // Put the live link here (Unstop, Google Form, etc.). While it is empty the
     // Register buttons show "Registration opens soon" instead of navigating.
-    url: '', // TODO confirm
+    url: 'https://docs.google.com/forms/d/e/1FAIpQLSdMvxr6sKXv3dZgRuOl37qYIlXev3YXhepXWWnfOsmlJDfqXg/viewform',
     comingSoonText: 'Registration opens soon — follow IEEE GUSB for the announcement.',
   },
 
@@ -57,7 +57,7 @@ export const event = {
   contact: {
     email: 'ieeegusb@galgotiasuniversity.edu.in',
     people: [
-      { name: 'Atharav', phone: '+91 78178 93220' },
+      { name: 'Jitansh Binwal', phone: '+91 78951 80806' },
       { name: 'Rudra Pratap Singh', phone: '+91 93107 95416' },
     ],
   },
@@ -86,42 +86,63 @@ export const about = {
 // `value` is counted up on scroll. `prefix`/`suffix` wrap the number.
 // Use `display` to show text instead of a counted number (e.g. '2–4').
 export const stats = [
-  { label: 'Design tracks', value: 4 }, // keep in sync with `tracks` below
-  { label: 'Team size', value: 4, display: '2–4' }, // TODO confirm
-  { label: 'Hours of transformation', value: 8 }, // TODO confirm
-  { label: 'Past registrations (QuantCraft)', value: 1400, suffix: '+' },
+  { label: 'Design tracks', value: 6 }, // keep in sync with `tracks` below
+  { label: 'Team size', value: 3, display: '2–3' },
+  { label: 'Hours of transformation', value: 4, display: '4.5' },
+  { label: 'Event date', value: 0, display: '28 Sep', suffix: ' 2026' },
 ];
 
 /* ---------------------------------------------------------------- Tracks */
-// Sample tracks so the layout can be reviewed. TODO confirm
 export const tracks = [
   {
     code: 'T-01',
-    title: 'HealthTech',
-    text: 'Design experiences that make care, wellbeing and health information easier to reach.',
+    title: 'UI Design',
+    stone: 'Power Stone',
+    text: 'Unleash raw creative force. Craft interfaces that command attention and dominate the visual landscape with unmatched power.',
+    tags: ['Visual Design', 'Components'],
   },
   {
     code: 'T-02',
-    title: 'Sustainable Futures',
-    text: 'Help people and campuses cut waste, save energy and live more sustainably.',
+    title: 'UX Research',
+    stone: 'Space Stone',
+    text: 'Navigate dimensions of user behavior. Teleport beyond assumptions to discover insights that reshape the user journey.',
+    tags: ['User Testing', 'Research'],
   },
   {
     code: 'T-03',
-    title: 'EdTech & Campus Life',
-    text: 'Reimagine how students learn, collaborate and navigate university life.',
+    title: 'Brand Identity',
+    stone: 'Reality Stone',
+    text: 'Bend reality to your vision. Build brand worlds that reshape how people perceive and connect with products.',
+    tags: ['Branding', 'Identity'],
   },
   {
     code: 'T-04',
-    title: 'Open Innovation',
-    text: 'Bring any real-world problem you care about and transform it into a solution.',
+    title: 'Product Design',
+    stone: 'Soul Stone',
+    text: 'Connect with the soul of the user. Design products with empathy, purpose, and an experience that truly resonates.',
+    tags: ['End-to-End', 'Systems'],
+  },
+  {
+    code: 'T-05',
+    title: 'Motion Design',
+    stone: 'Time Stone',
+    text: 'Manipulate time itself. Craft animations and transitions that guide users through temporal experiences with precision.',
+    tags: ['Animation', 'Interaction'],
+  },
+  {
+    code: 'T-06',
+    title: 'Design Systems',
+    stone: 'Mind Stone',
+    text: 'Achieve cosmic-level intelligence. Build scalable design systems that bring order to the multiverse of components.',
+    tags: ['Tokens', 'Scalability'],
   },
 ];
 
 /* ---------------------------------------------------------------- Prizes */
 export const prizes = [
-  { place: '1st', title: 'Winner', reward: 'To Be Announced', tier: 'gold' }, // TODO confirm
-  { place: '2nd', title: 'First Runner-up', reward: 'To Be Announced', tier: 'silver' },
-  { place: '3rd', title: 'Second Runner-up', reward: 'To Be Announced', tier: 'bronze' },
+  { place: '1st', title: 'Winner', reward: '₹3,000', tier: 'gold' },
+  { place: '2nd', title: 'First Runner-up', reward: '₹2,000', tier: 'silver' },
+  { place: '3rd', title: 'Second Runner-up', reward: '₹1,000', tier: 'bronze' },
 ];
 export const specialMentions = {
   title: 'Special mentions',
@@ -132,16 +153,19 @@ export const goodies = 'Certificates for every participant, plus goodies for win
 /* -------------------------------------------------------------- Schedule */
 // `time` is IST (24h "HH:MM"). The page works out which slot is live on the day.
 export const schedule = [
-  { time: '09:00', title: 'Reporting & registration', text: 'Collect your badge and find your team table.' },
-  { time: '10:00', title: 'Opening ceremony', text: 'Welcome, rules and problem statements revealed.' },
-  { time: '10:30', title: 'Research sprint', text: 'Define the user, the problem and the opportunity.' },
-  { time: '12:30', title: 'Mentor checkpoint', text: 'Quick feedback on direction and wireframes.' },
-  { time: '13:00', title: 'Lunch break', text: 'Refuel.' },
-  { time: '14:00', title: 'Prototype build', text: 'High-fidelity prototype takes shape.' },
-  { time: '16:00', title: 'Submissions close', text: 'Prototype link and deck submitted.' },
-  { time: '16:15', title: 'Pitches & judging', text: 'Each team presents to the panel.' },
-  { time: '17:30', title: 'Results & closing', text: 'Winners announced. Transformation complete.' },
-]; // TODO confirm
+  { time: '14:00', slot: '01', title: 'Registration & Team Check-in', text: 'Attendance, team verification, seating (2:00 – 2:15 PM)', emoji: '📋' },
+  { time: '14:15', slot: '02', title: 'Opening', text: 'Welcome & IEEE GUSB CS introduction (2:15 – 2:25 PM)', emoji: '🚀' },
+  { time: '14:25', slot: '03', title: 'Designathon Briefing', text: 'Rules, tracks, judging criteria (2:25 – 2:35 PM)', emoji: '📜' },
+  { time: '14:35', slot: '04', title: 'Challenge Reveal', text: 'Problem statements released (2:35 – 2:45 PM)', emoji: '⚡' },
+  { time: '14:45', slot: '05', title: '1. EMPATHIZE', text: 'Research, observation, user needs (2:45 – 3:15 PM)', emoji: '🔍' },
+  { time: '15:15', slot: '06', title: '2. DEFINE', text: 'Finalize problem statement (3:15 – 3:35 PM)', emoji: '🎯' },
+  { time: '15:35', slot: '07', title: '3. IDEATE', text: 'Brainstorm and select solution (3:35 – 4:05 PM)', emoji: '💡' },
+  { time: '16:05', slot: '08', title: '4. Prototype', text: 'Build digital / physical / phygital prototype (4:05 – 5:00 PM)', emoji: '🛠️' },
+  { time: '17:00', slot: '09', title: 'Final Submission', text: 'Submit prototype (5:00 – 5:10 PM)', emoji: '⏱️' },
+  { time: '17:10', slot: '10', title: 'Team Presentations', text: '3 min presentation + 2 min Q&A (5:10 – 5:45 PM)', emoji: '🎤' },
+  { time: '17:45', slot: '11', title: 'Jury Evaluation', text: 'Final scoring (5:45 – 5:55 PM)', emoji: '⚖️' },
+  { time: '17:55', slot: '12', title: 'Results & Recognition', text: 'Winner, runner-up & special awards (5:55 – 6:00 PM)', emoji: '🏆' },
+];
 
 /* --------------------------------------------------------------- Judging */
 // `weight` is the percentage shown on each power bar.
@@ -164,15 +188,14 @@ export const venue = {
 };
 
 /* ------------------------------------------------------------- Committee */
-// Photos: /public/images/team/<firstname-lastname>.jpg (600×600).
-// TODO confirm names, roles and photos.
 export const committee = [
-  { name: 'Rudra Pratap Singh', role: 'Role TBA', photo: '/images/team/rudra-pratap-singh.jpg' },
-  { name: 'Atharav', role: 'Role TBA', photo: '/images/team/atharav.jpg' },
-  { name: 'Member Name', role: 'Role TBA', photo: '/images/team/firstname-lastname.jpg' },
-  { name: 'Member Name', role: 'Role TBA', photo: '/images/team/firstname-lastname.jpg' },
-  { name: 'Member Name', role: 'Role TBA', photo: '/images/team/firstname-lastname.jpg' },
-  { name: 'Member Name', role: 'Role TBA', photo: '/images/team/firstname-lastname.jpg' },
+  { name: 'Ansh Vashisth', role: 'IEEE GUSB Chairperson', avatar: '/images/team/ansh-vashisth-hulk.png', photo: '/images/team/ansh-vashisth.png' },
+  { name: 'Kritika Jha', role: 'IEEE GUSB Vice-Chairperson', avatar: '/images/team/kritika-jha-hulk.png', photo: '/images/team/kritika-jha-real.png' },
+  { name: 'Mohammad Rahil', role: 'IEEE GUSB Secretary', avatar: '/images/team/mohammad-rahil-hulk.png', photo: '/images/team/mohammad-rahil-real.png', photoClass: 'object-top translate-y-10 scale-95' },
+  { name: 'Atharav Singh', role: 'IEEE GUSB Treasurer', avatar: '/images/team/atharav-singh-hulk.png', photo: '/images/team/atharav-singh-real.png' },
+  { name: 'Tarun Khushwaha', role: 'IEEE GUSB Techlead', avatar: '/images/team/tarun-khushwaha-hulk.png', photo: '/images/team/tarun-khushwaha-real.png', photoClass: 'object-top translate-y-10 scale-95' },
+  { name: 'Jitansh Binwal', role: 'Organizer', avatar: '/images/team/jitansh-binwal-hulk.png', photo: '/images/team/jitansh-binwal-real.png' },
+  { name: 'Rudra Pratap Singh', role: 'Organizer', avatar: '/images/team/rudra-pratap-singh-hulk.png', photo: '/images/team/rudra-pratap-singh-real.png' },
 ];
 
 /* ------------------------------------------------------------------- FAQ */
@@ -187,7 +210,7 @@ export const faqs = [
   },
   {
     q: 'How big can my team be?',
-    a: 'Teams of 2–4 members (to be confirmed). Solo participants can be matched with a team on the day.',
+    a: 'Teams of 2–3 members. Solo participants can be matched with a team on the day.',
   },
   {
     q: 'Is there a registration fee?',
@@ -203,7 +226,7 @@ export const faqs = [
   },
   {
     q: 'Who do I contact with questions?',
-    a: 'Email ieeegusb@galgotiasuniversity.edu.in or call Atharav (+91 78178 93220) or Rudra Pratap Singh (+91 93107 95416).',
+    a: 'Email ieeegusb@galgotiasuniversity.edu.in or call Jitansh Binwal (+91 78951 80806) or Rudra Pratap Singh (+91 93107 95416).',
   },
 ];
 

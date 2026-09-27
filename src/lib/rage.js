@@ -9,12 +9,12 @@
    ========================================================================== */
 import { prefersReducedMotion } from './motion';
 
-// Colour stops (RGB). Banner → unstable → Hulk.
+// Colour stops (RGB). Green Hulk / Gamma theme across the entire template.
 const STOPS = [
-  { t: 0, accent: [143, 163, 184], text: [168, 186, 204], heading: [143, 178, 201], glow: [61, 169, 255] },
-  { t: 0.22, accent: [160, 32, 240], text: [201, 160, 255], heading: [79, 195, 247], glow: [138, 43, 226] },
-  { t: 0.5, accent: [124, 255, 0], text: [124, 255, 0], heading: [79, 195, 247], glow: [57, 255, 20] },
-  { t: 1, accent: [124, 255, 0], text: [124, 255, 0], heading: [79, 195, 247], glow: [57, 255, 20] },
+  { t: 0, accent: [124, 255, 0], text: [124, 255, 0], heading: [124, 255, 0], glow: [57, 255, 20] },
+  { t: 0.25, accent: [124, 255, 0], text: [124, 255, 0], heading: [124, 255, 0], glow: [57, 255, 20] },
+  { t: 0.5, accent: [124, 255, 0], text: [124, 255, 0], heading: [124, 255, 0], glow: [57, 255, 20] },
+  { t: 1, accent: [124, 255, 0], text: [124, 255, 0], heading: [124, 255, 0], glow: [57, 255, 20] },
 ];
 
 const lerp = (a, b, t) => a + (b - a) * t;

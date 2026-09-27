@@ -23,10 +23,10 @@ function useCurrentSlot() {
 
 const SEGMENTS = 20;
 
-// Segment colour ramps purple → gamma green (computed here: Safari 15 lacks calc() in rgb()).
+// Segment colour ramps gamma green (computed here: Safari 15 lacks calc() in rgb()).
 const segStyle = (i) => {
   const t = i / (SEGMENTS - 1);
-  const c = [160 + (124 - 160) * t, 32 + (255 - 32) * t, 240 * (1 - t)].map(Math.round).join(',');
+  const c = [Math.round(57 + (124 - 57) * t), 255, Math.round(20 * (1 - t))].join(',');
   return { '--seg': `rgb(${c})`, '--seg-glow': `rgba(57,255,20,${(0.2 + 0.5 * t).toFixed(2)})` };
 };
 
@@ -70,6 +70,20 @@ export default function Timeline({ stage, index }) {
       provisional={!confirmed.schedule}
       intro="Every hour the pressure rises. Watch the rage meter fill as the day builds to the final pitch."
     >
+      {/* Right side Hulk graphic with balanced transparency & background removal */}
+      <div
+        className="pointer-events-none absolute right-0 top-1/2 -z-10 h-[85%] max-h-[700px] w-full max-w-[550px] -translate-y-1/2 overflow-hidden opacity-50 mix-blend-screen select-none sm:w-1/2"
+        aria-hidden="true"
+      >
+        <img
+          src="/images/timeline-hulk-nobg.png"
+          alt=""
+          className="h-full w-full object-contain object-right"
+        />
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-void/40 to-void" />
+        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void" />
+      </div>
+
       {/* Block on mobile so the meter can stick while the list scrolls; grid on desktop. */}
       <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-10">
         {/* Rage meter */}
@@ -108,10 +122,15 @@ export default function Timeline({ stage, index }) {
                   }`}
                   aria-hidden="true"
                 />
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  <time className={`font-mono text-sm tabular-nums transition-colors ${on ? 'text-gamma' : 'text-muted'}`}>{s.time} IST</time>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  {s.slot && (
+                    <span className="font-mono text-xs font-bold text-gamma/80 border border-gamma/40 px-1.5 py-0.5 rounded">
+                      {s.slot}
+                    </span>
+                  )}
+                  <time className={`font-mono text-base sm:text-lg font-bold tabular-nums transition-colors ${on ? 'text-gamma' : 'text-muted'}`}>{s.time} IST</time>
                   <h3 className="font-display text-xl font-bold uppercase text-ink sm:text-2xl" style={{ fontStretch: '85%' }}>
-                    {s.title}
+                    {s.emoji && <span className="mr-2 not-uppercase">{s.emoji}</span>}{s.title}
                   </h3>
                   {now && <span className="bg-gamma px-2 py-0.5 font-mono text-xs font-bold uppercase text-void">Now</span>}
                 </div>

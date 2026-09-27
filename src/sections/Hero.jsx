@@ -68,9 +68,26 @@ export default function Hero({ revealed = true }) {
       aria-labelledby="hero-title"
       className={`hero min-h-screen-safe relative flex items-center overflow-hidden pb-32 pt-24 sm:pt-28 ${revealed ? 'is-revealed' : ''}`}
     >
+      {/* Hulk backdrop image with cinematic lighting and blending */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <img
+          src="/images/hero-bg.png"
+          alt=""
+          className="h-full w-full object-cover object-center sm:object-[center_20%] opacity-45 mix-blend-screen transition-transform duration-1000 ease-out"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-void via-void/35 to-void/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-void/80 via-transparent to-void/80" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 40%, rgba(57, 255, 20, 0.08) 0%, transparent 50%, rgba(5, 5, 5, 0.8) 85%)',
+          }}
+        />
+      </div>
+
       {/* background: faint lab grid, particles, vignette, scanner sweep */}
       <div
-        className="absolute inset-0 opacity-[0.35]"
+        className="absolute inset-0 opacity-[0.25]"
         style={{
           backgroundImage:
             'linear-gradient(rgb(var(--accent) / .08) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--accent) / .08) 1px, transparent 1px)',
@@ -206,12 +223,12 @@ export default function Hero({ revealed = true }) {
           font-weight: 800;
           font-stretch: 92%;
           letter-spacing: .02em;
-          background: linear-gradient(180deg, #ffffff 0%, #d9dee6 30%, #8e98a6 52%, #eef2f7 58%, #6b7684 100%);
+          background: linear-gradient(180deg, #ffffff 0%, #e2ffd0 30%, #7cff00 52%, #eefbf0 58%, #39ff14 100%);
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
-          color: #d9dee6;
-          filter: drop-shadow(0 0 1px #3DA9FF) drop-shadow(0 0 14px rgb(61 169 255 / .45));
+          color: #7cff00;
+          filter: drop-shadow(0 0 1px #7cff00) drop-shadow(0 0 14px rgb(57 255 20 / .45));
         }
         @media (max-width: 420px) { .hero-wordmark { font-stretch: 78%; } }
         .hero-ecg { animation: ecg-scroll 14s linear infinite; }
@@ -253,7 +270,7 @@ export default function Hero({ revealed = true }) {
         .hero-rings { width: min(70vw, 520px); height: min(70vw, 520px); transform: translate(-50%, -50%); opacity: .55; }
         .hero-rings .ring { fill: none; stroke: rgb(124 255 0 / .5); transform-origin: 200px 200px; transform-box: view-box; }
         .hero-rings .ring-a { stroke-width: 1.2; stroke-dasharray: 2 4 18 4; animation: spin 38s linear infinite; }
-        .hero-rings .ring-b { stroke-width: 2; stroke-dasharray: 30 8 4 8; stroke: rgb(79 195 247 / .45); animation: spin 26s linear infinite reverse; }
+        .hero-rings .ring-b { stroke-width: 2; stroke-dasharray: 30 8 4 8; stroke: rgb(57 255 20 / .45); animation: spin 26s linear infinite reverse; }
         .hero-rings .ring-c { stroke-width: 1; stroke-dasharray: 1 3; animation: spin 18s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -281,7 +298,7 @@ export default function Hero({ revealed = true }) {
         @keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100vh); } }
 
         .hero-shimmer {
-          background-image: linear-gradient(90deg, #8b5cf6, #ec4899, #f97316, #ffd0a8, #ec4899, #8b5cf6);
+          background-image: linear-gradient(90deg, #7cff00, #39ff14, #ffffff, #a3ff2e, #39ff14, #7cff00);
           background-size: 250% 100%;
         }
         .hero.is-revealed .hero-shimmer { animation: hero-rise .8s cubic-bezier(.2,.8,.2,1) var(--d, 0s) both, shimmer 5s linear 1.4s infinite; }

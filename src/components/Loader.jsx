@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { event } from '../data/event';
 import { paletteAt } from '../lib/rage';
-import { prefersReducedMotion, setMotion } from '../lib/motion';
+import { prefersReducedMotion } from '../lib/motion';
 
 /*
   Intro — "Fusion" (~4.6 s, skippable with the button or Esc). All canvas, original art.
@@ -418,7 +418,7 @@ function FusionCanvas({ reduced, readout }) {
 
 const STATUS = {
   dormant: ['Dormant', undefined],
-  fusing: ['Fusing', '#C9A0FF'],
+  fusing: ['Fusing', '#7CFF00'],
   formed: ['Gamma particle formed', '#7CFF00'],
   critical: ['Critical — releasing', '#7CFF00'],
 };
@@ -511,20 +511,6 @@ export default function Loader({ onDone, onReveal }) {
           <span className="normal-case">γ</span> · Gamma particle formed
         </p>
       </div>
-
-      {reduced && (
-        // Animations are off on this device (e.g. Windows "Animation effects" off).
-        // Offer the full fusion + explosion intro without forcing it on anyone.
-        <div className="absolute inset-x-0 bottom-24 z-10 flex flex-col items-center gap-2 px-4 text-center sm:bottom-28">
-          <button type="button" onClick={() => setMotion(true)} className="btn btn-gamma">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M7 4l13 8-13 8z" />
-            </svg>
-            Play full animation
-          </button>
-          <p className="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-steel">Animations are off on this device</p>
-        </div>
-      )}
 
       <button
         type="button"

@@ -198,7 +198,8 @@ export default function FxLayer() {
       }
     };
 
-    window.addEventListener('pointerdown', onDown, { passive: true });
+    // pointerdown smash listener removed per user request
+
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('keydown', onKey);
@@ -207,7 +208,6 @@ export default function FxLayer() {
       cancelAnimationFrame(vraf);
       clearTimeout(timer);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('keydown', onKey);

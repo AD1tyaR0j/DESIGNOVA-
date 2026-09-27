@@ -4,24 +4,8 @@ import { prefersReducedMotion } from '../lib/rage';
 import { playImpact } from '../lib/audio';
 
 /** Shockwave ring at the click point + short screen shake. Skipped for reduced motion. */
-function impactAt(x, y) {
-  playImpact();
-  if (prefersReducedMotion()) return;
-  const ring = document.createElement('div');
-  ring.className = 'shockwave';
-  ring.style.left = `${x}px`;
-  ring.style.top = `${y}px`;
-  document.body.appendChild(ring);
-  ring.addEventListener('animationend', () => ring.remove());
-  setTimeout(() => ring.remove(), 1000);
-
-  const shell = document.getElementById('app-shell');
-  if (shell) {
-    shell.classList.remove('is-shaking');
-    void shell.offsetWidth; // restart the animation
-    shell.classList.add('is-shaking');
-    setTimeout(() => shell.classList.remove('is-shaking'), 400);
-  }
+function impactAt() {
+  // Screen shake and shockwave ring disabled per user request
 }
 
 export default function RegisterButton({ compact = false, className = '', label = 'Register now' }) {

@@ -65,6 +65,17 @@ function Countdown() {
 export default function About({ stage, index }) {
   return (
     <Section id="about" stage={stage} index={index} eyebrow="Brief // What is this?" title={about.heading} intro={about.intro}>
+      {/* Backdrop image - lowered/aligned to top so head is clearly visible without clicking */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <img
+          src="/images/about-bg.jpg"
+          alt=""
+          className="h-full w-full object-cover object-top opacity-55 mix-blend-screen"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/30 opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-void/60 via-transparent to-void/60" />
+      </div>
+
       <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {about.steps.map((s, i) => (
           <m.li
