@@ -1,0 +1,688 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Tokens. --accent / --accent-text / --heading / --glow are "r g b" triplets
+   rewritten on scroll by src/lib/rage.js. Defaults = the calm Banner state.
+   ========================================================================== */
+:root {
+  --rage: 0;
+  --accent: 143 163 184;
+  --accent-text: 168 186 204;
+  --heading: 143 178 201;
+  --glow: 61 169 255;
+  --gamma: 124 255 0;
+  --bg: #050505;
+  --panel: #0b0b0f;
+  --ink: #e8e8e8;
+  --header-h: 64px;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--header-h) + 12px);
+  }
+  /* html.rm = reduced motion (device setting or the visitor's choice; see src/lib/motion.js) */
+  html:not(.rm) {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-body antialiased;
+    background: var(--bg);
+    overflow-x: hidden;
+    min-width: 320px;
+  }
+  /* overflow-x: clip keeps position: sticky working where supported */
+  @supports (overflow: clip) {
+    body {
+      overflow-x: clip;
+    }
+  }
+  ::selection {
+    background: rgb(var(--gamma) / 0.85);
+    color: #050505;
+  }
+  :focus-visible {
+    outline: 2px solid #7cff00;
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    overflow-wrap: break-word;
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply fixed left-4 top-2 z-[200] -translate-y-24 bg-gamma px-4 py-2 font-mono text-sm text-void;
+    transition: transform 0.15s;
+  }
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  .container-site {
+    @apply mx-auto w-full max-w-site px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Heading that "transforms" with its section's stage (set inline via headingAxes()) */
+  .h-trans {
+    font-family: 'Saira', Impact, 'Arial Narrow', sans-serif;
+    font-weight: var(--hw, 700);
+    font-stretch: var(--hs, 90%);
+    color: rgb(var(--heading));
+    letter-spacing: 0.01em;
+    line-height: 0.98;
+    text-transform: uppercase;
+  }
+  @media (max-width: 420px) {
+    .h-trans {
+      font-stretch: var(--hs-sm, 80%);
+    }
+  }
+
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.2em] sm:text-sm;
+    color: rgb(var(--accent-text));
+  }
+
+  .tagline-gradient {
+    background-image: linear-gradient(90deg, #8b5cf6, #ec4899, #f97316);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #ec4899; /* fallback if background-clip:text is unsupported */
+  }
+
+  /* --------------------------------------------------------------- HUD frame
+     Border + fill are clip-pathed *decoration layers*, so the element itself
+     is never clipped and its focus ring stays visible. */
+  .hud {
+    --cut: 16px;
+    position: relative;
+    isolation: isolate;
+  }
+  .hud-edge,
+  .hud-fill {
+    position: absolute;
+    pointer-events: none;
+    -webkit-clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  }
+  .hud-edge {
+    inset: 0;
+    z-index: -2;
+    background: linear-gradient(135deg, rgb(var(--accent) / 0.75), rgb(var(--accent) / 0.18) 40%, rgb(var(--accent) / 0.18) 60%, rgb(var(--accent) / 0.75));
+    transition: background 0.3s;
+  }
+  .hud-fill {
+    inset: 1px;
+    z-index: -1;
+    /* fallback first, then color-mix() where supported */
+    background: linear-gradient(180deg, rgb(var(--accent) / 0.06), rgb(11 11 15 / 0.96) 55%), #0b0b0f;
+  }
+  @supports (background: color-mix(in srgb, red 50%, blue)) {
+    .hud-fill {
+      background: linear-gradient(180deg, color-mix(in srgb, rgb(var(--accent)) 7%, #0b0b0f), #0b0b0f 55%);
+    }
+  }
+  .hud-hazard {
+    position: absolute;
+    top: 0;
+    right: calc(var(--cut) + 12px);
+    width: 56px;
+    height: 6px;
+    pointer-events: none;
+    background: repeating-linear-gradient(-45deg, rgb(var(--accent)) 0 5px, transparent 5px 10px);
+    opacity: 0.9;
+  }
+  .hud-tick {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    border-color: rgb(var(--accent));
+  }
+  .hud-tick.tl { left: -4px; top: calc(var(--cut) + 6px); border-left-width: 2px; border-top-width: 2px; }
+  .hud-tick.br { right: -4px; bottom: calc(var(--cut) + 6px); border-right-width: 2px; border-bottom-width: 2px; }
+
+  .hazard-bar {
+    height: 8px;
+    background: repeating-linear-gradient(-45deg, rgb(var(--accent)) 0 8px, #050505 8px 16px);
+  }
+
+  /* ---------------------------------------------------------------- Buttons */
+  .btn {
+    @apply relative inline-flex min-h-[44px] items-center justify-center gap-2 px-6 py-3 font-display text-sm font-bold uppercase tracking-[0.14em] sm:text-base;
+    font-stretch: 100%;
+    -webkit-clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    transition: transform 0.15s, box-shadow 0.2s, background-color 0.2s, color 0.2s;
+  }
+  /* The only thing already green on the calm page: your idea, waiting. */
+  .btn-gamma {
+    @apply bg-gamma text-void;
+    box-shadow: 0 0 0 rgb(var(--gamma) / 0);
+  }
+  .btn-gamma:hover {
+    background: #9dff45;
+  }
+  .btn-gamma:active {
+    transform: translateY(1px) scale(0.98);
+  }
+  .btn-ghost {
+    @apply text-ink;
+    background: rgb(var(--accent) / 0.14);
+    box-shadow: inset 0 0 0 1px rgb(var(--accent) / 0.7);
+  }
+  .btn-ghost:hover {
+    background: rgb(var(--accent) / 0.26);
+  }
+  /* clip-path clips outlines, so the focus ring is drawn inside the button:
+     white ring (shows on dark buttons) + black ring (shows on the green one). */
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 5px #050505;
+  }
+  /* Safari < 15.4 has no :focus-visible: show the ring on :focus instead
+     (the :not() rule is dropped there, so the ring stays for keyboard users). */
+  .btn:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 5px #050505;
+  }
+  .btn:focus:not(:focus-visible) {
+    box-shadow: none;
+  }
+
+  .tag-provisional {
+    @apply inline-flex items-center gap-1.5 border px-2 py-0.5 font-mono text-[0.7rem] uppercase tracking-widest;
+    color: #ffd166;
+    border-color: rgb(255 209 102 / 0.5);
+    background: rgb(255 209 102 / 0.07);
+  }
+}
+
+/* ============================================================== Effects */
+
+/* Screen shake on impact (Register click). Disabled for reduced motion. */
+@keyframes shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  20% { transform: translate3d(-6px, 3px, 0); }
+  40% { transform: translate3d(5px, -4px, 0); }
+  60% { transform: translate3d(-4px, 2px, 0); }
+  80% { transform: translate3d(3px, -1px, 0); }
+}
+.is-shaking {
+  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shockwave {
+  from { transform: translate(-50%, -50%) scale(0.1); opacity: 0.9; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.shockwave {
+  position: fixed;
+  z-index: 150;
+  width: 320px;
+  height: 320px;
+  border-radius: 9999px;
+  pointer-events: none;
+  border: 3px solid rgb(var(--gamma));
+  box-shadow: 0 0 24px rgb(var(--gamma) / 0.8), inset 0 0 24px rgb(var(--gamma) / 0.5);
+  animation: shockwave 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes crack-draw {
+  to { stroke-dashoffset: 0; }
+}
+.crack-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.is-drawn .crack-path {
+  animation: crack-draw 0.9s cubic-bezier(0.3, 0.6, 0.2, 1) forwards;
+}
+
+@keyframes ecg-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* Scanlines: lab-monitor texture over the whole page */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgb(255 255 255 / 0.018) 0 1px, transparent 1px 3px);
+}
+
+.min-h-screen-safe {
+  min-height: 100vh;
+}
+@supports (min-height: 100svh) {
+  .min-h-screen-safe {
+    min-height: 100svh;
+  }
+}
+
+/* ------------------------------------------------------------ Track cards
+   Hover / focus / (touch) in-view: energy rises, glow builds, card fractures. */
+.track-card .hud-edge {
+  transition: filter 0.35s, background 0.35s;
+}
+.track-energy {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(0deg, rgb(124 255 0 / 0.16), rgb(124 255 0 / 0.02) 55%, transparent 80%);
+  transform: translateY(100%);
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.track-fracture {
+  -webkit-clip-path: inset(0 100% 0 0);
+  clip-path: inset(0 100% 0 0);
+  opacity: 0.8;
+  filter: drop-shadow(0 0 3px #39ff14);
+  transition: -webkit-clip-path 0.45s 0.15s ease-out, clip-path 0.45s 0.15s ease-out;
+}
+.track-meter-fill {
+  transform: scaleX(0.12);
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.track-card:hover .track-energy,
+.track-card:focus-within .track-energy,
+.track-card[data-charged='true'] .track-energy {
+  transform: translateY(0);
+}
+.track-card:hover .track-fracture,
+.track-card[data-charged='true'] .track-fracture {
+  -webkit-clip-path: inset(0 0 0 0);
+  clip-path: inset(0 0 0 0);
+}
+.track-card:hover .track-meter-fill,
+.track-card[data-charged='true'] .track-meter-fill {
+  transform: scaleX(1);
+}
+.track-card:hover .hud-edge,
+.track-card[data-charged='true'] .hud-edge {
+  background: linear-gradient(135deg, #7cff00, rgb(124 255 0 / 0.35) 45%, rgb(124 255 0 / 0.35) 55%, #7cff00);
+  filter: drop-shadow(0 0 8px rgb(57 255 20 / 0.7));
+}
+
+/* ------------------------------------------------------------ Prize cards */
+@keyframes impact-jolt {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(0, 5px, 0) scale(0.985); }
+  55% { transform: translate3d(0, -3px, 0) scale(1.01); }
+  100% { transform: translate3d(0, -6px, 0) scale(1.01); }
+}
+@keyframes crater-ring {
+  from { transform: translate(-50%, -50%) scale(0.2); opacity: 0.9; }
+  to { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+}
+.prize-card {
+  transition: transform 0.25s;
+}
+.prize-card:hover,
+.prize-card:focus-within {
+  animation: impact-jolt 0.35s cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+}
+.prize-ring {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 180px;
+  height: 180px;
+  border-radius: 9999px;
+  border: 2px solid var(--tier);
+  opacity: 0;
+  pointer-events: none;
+}
+.prize-card:hover .prize-ring {
+  animation: crater-ring 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.prize-card:hover .prize-crater {
+  opacity: 1;
+}
+.prize-crater {
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+
+/* --------------------------------------------------- Container queries
+   Cards switch to a side-by-side layout when *their own* width allows.
+   Fallback: viewport media query for browsers without container queries
+   (Safari < 16, Firefox < 110). */
+.cq {
+  container-type: inline-size;
+}
+.cq-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (min-width: 1024px) {
+  .cq-row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+@supports (container-type: inline-size) {
+  @media (min-width: 1024px) {
+    .cq-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+  @container (min-width: 520px) {
+    .cq-row {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  }
+}
+
+/* ------------------------------------------------------------- :has()
+   Lock page scroll while the mobile menu is open. JS also toggles
+   .menu-open on <html> as the fallback for browsers without :has(). */
+html.menu-open {
+  overflow: hidden;
+}
+@supports selector(:has(*)) {
+  html:has(#mobile-menu[data-open='true']) {
+    overflow: hidden;
+  }
+}
+
+/* ------------------------------------------------------------ Custom cursor */
+html.has-orb-cursor,
+html.has-orb-cursor * {
+  cursor: none !important;
+}
+html.has-orb-cursor iframe {
+  cursor: auto !important;
+}
+
+/* --------------------------------------------------------- Reduced motion
+   Applied via the `rm` class on <html>, which follows the device's
+   prefers-reduced-motion setting unless the visitor chose otherwise
+   with the "Animations" switch (src/lib/motion.js). */
+html.rm {
+  scroll-behavior: auto;
+}
+html.rm *,
+html.rm *::before,
+html.rm *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html.rm .is-shaking {
+  animation: none !important;
+}
+html.rm .shockwave {
+  display: none;
+}
+
+/* ==========================================================================
+   HULK FX — site-wide animation layer. Every effect below is switched off
+   under html.rm (animations off) at the end of this block.
+   ========================================================================== */
+
+/* ---- section headings: smash in, shake, crack beneath; glitch on hover ---- */
+.sec-head .sec-eyebrow,
+.sec-head .sec-title,
+.sec-head .sec-intro {
+  opacity: 0;
+}
+.sec-head.is-in .sec-eyebrow {
+  animation: eyebrow-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.sec-head.is-in .sec-title {
+  animation: smash-in 0.75s cubic-bezier(0.2, 1.3, 0.35, 1) 0.1s both;
+}
+.sec-head.is-in .sec-intro {
+  animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both;
+}
+@keyframes eyebrow-in {
+  from { opacity: 0; -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); }
+  to { opacity: 1; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); }
+}
+@keyframes smash-in {
+  0% { opacity: 0; transform: translateY(-40px) scale(1.35); filter: blur(6px); }
+  50% { opacity: 1; transform: translateY(0) scale(0.97); filter: blur(0); }
+  62% { transform: translate(-4px, 2px); }
+  74% { transform: translate(4px, -1px); }
+  86% { transform: translate(-2px, 0); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+/* glitch is added alongside smash-in (same name keeps running, so the entrance never replays) */
+.sec-head.is-in .sec-title:hover {
+  animation: smash-in 0.75s cubic-bezier(0.2, 1.3, 0.35, 1) 0.1s both, glitch 0.4s steps(2, end) 1;
+}
+@keyframes glitch {
+  0% { text-shadow: 3px 0 #a020f0, -3px 0 #7cff00; transform: translateX(1px); }
+  50% { text-shadow: -3px 1px #a020f0, 3px -1px #7cff00; transform: translateX(-1px); }
+  100% { text-shadow: none; transform: none; }
+}
+
+/* ---- hazard "radiation zone" dividers with moving stripes ---- */
+.zone-divider {
+  padding: 0 1rem;
+  opacity: 0.7;
+}
+.zone-stripes {
+  background: repeating-linear-gradient(-45deg, rgb(var(--accent) / 0.8) 0 8px, transparent 8px 16px);
+  background-size: 22.63px 22.63px;
+  animation: hazard-move 1.4s linear infinite;
+}
+.zone-stripes:last-child {
+  animation-direction: reverse;
+}
+@keyframes hazard-move {
+  to { background-position: 22.63px 0; }
+}
+
+/* ---- HUD cards: power-on scan, cursor spotlight, 3D tilt ---- */
+.hud {
+  transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
+  transition: transform 0.25s ease-out;
+}
+.hud-spot,
+.hud-sweep {
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+}
+.hud-spot {
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgb(124 255 0 / 0.16), transparent 60%);
+}
+.hud:hover .hud-spot {
+  opacity: 1;
+}
+.hud-sweep {
+  opacity: 0;
+  background: linear-gradient(180deg, transparent 42%, rgb(124 255 0 / 0.22) 49%, rgb(200 255 150 / 0.35) 50%, transparent 58%);
+  background-size: 100% 300%;
+  background-position: 0 100%;
+}
+.hud.is-on .hud-sweep {
+  animation: power-on 1.1s ease-out 0.1s both;
+}
+@keyframes power-on {
+  0% { opacity: 1; background-position: 0 100%; }
+  90% { opacity: 1; }
+  100% { opacity: 0; background-position: 0 -50%; }
+}
+
+/* ---- buttons: energy shine sweep on hover ---- */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 0.45) 50%, transparent 65%);
+  transform: translateX(-130%);
+}
+.btn:hover::after {
+  transform: translateX(130%);
+  transition: transform 0.6s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* ---- timeline: gamma pulse travelling down the line ---- */
+.tl-pulse {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  width: 8px;
+  height: 60px;
+  border-radius: 4px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, #b6ff6b, transparent);
+  box-shadow: 0 0 14px #39ff14;
+  animation: tl-pulse 3.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+@keyframes tl-pulse {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: calc(100% - 60px); opacity: 0; }
+}
+
+/* ---- judging power bars: shine sweep ---- */
+.power-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.55) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: bar-shine 2.8s ease-in-out 1.2s infinite;
+}
+@keyframes bar-shine {
+  0% { background-position: 150% 0; }
+  60%, 100% { background-position: -100% 0; }
+}
+
+/* ---- committee flip cards: lift and glow ---- */
+.flip {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+.flip:hover {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 10px 24px rgb(57 255 20 / 0.25));
+}
+
+/* ---- stats: numbers pulse with energy ---- */
+.stat-num {
+  animation: stat-pulse 3s ease-in-out infinite;
+}
+@keyframes stat-pulse {
+  0%, 100% { text-shadow: 0 0 calc(var(--rage) * 30px) rgb(var(--glow) / 0.5); }
+  50% { text-shadow: 0 0 calc(8px + var(--rage) * 40px) rgb(var(--glow) / 0.8); }
+}
+
+/* ---- FAQ: open answer gets an energy edge ---- */
+.faq-panel {
+  border-left: 2px solid #7cff00;
+  padding-left: 1rem;
+  box-shadow: -8px 0 16px -10px #39ff14;
+}
+
+/* ---- global: impact thud, rage vignette, gamma overload easter egg ---- */
+@keyframes thud {
+  0%, 100% { transform: none; }
+  30% { transform: translate3d(0, 3px, 0); }
+  60% { transform: translate3d(-2px, -1px, 0); }
+}
+.is-thud {
+  animation: thud 0.2s ease-out both;
+}
+.rage-vignette {
+  box-shadow: inset 0 0 140px 20px rgb(57 255 20 / 0.45), inset 0 0 40px rgb(124 255 0 / 0.35);
+}
+html.gamma-overload #app-shell {
+  animation: shake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97) 2 both;
+}
+.overload {
+  background: radial-gradient(ellipse at center, rgb(57 255 20 / 0.25), transparent 70%);
+  animation: overload-fade 2.6s ease-out both;
+}
+.overload-text {
+  font-size: clamp(2.5rem, 11vw, 9rem);
+  font-stretch: 110%;
+  color: #7cff00;
+  text-shadow: 0 0 30px #39ff14, 4px 4px 0 #050505;
+  animation: overload-slam 0.6s cubic-bezier(0.2, 1.4, 0.35, 1) both;
+}
+@keyframes overload-fade {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes overload-slam {
+  from { transform: scale(2.2) rotate(-4deg); opacity: 0; }
+  to { transform: scale(1) rotate(-4deg); opacity: 1; }
+}
+
+/* ---- animations off: static, fully visible ---- */
+html.rm .sec-head .sec-eyebrow,
+html.rm .sec-head .sec-title,
+html.rm .sec-head .sec-intro {
+  opacity: 1;
+  animation: none !important;
+}
+html.rm .hud {
+  transform: none;
+}
+html.rm .hud-spot,
+html.rm .hud-sweep,
+html.rm .tl-pulse,
+html.rm .btn::after {
+  display: none;
+}
+html.rm .zone-stripes,
+html.rm .power-fill::after,
+html.rm .stat-num {
+  animation: none !important;
+}
+html.rm .flip:hover,
+html.rm .btn:hover {
+  transform: none;
+}

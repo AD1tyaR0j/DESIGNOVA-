@@ -1,0 +1,25 @@
+DESIGNOVA 2026 - image drop folder
+==================================
+
+Drop the supplied files here with EXACTLY these lowercase names.
+Names are case-sensitive on the live server (Vercel/Linux):
+"Venue.JPG" will NOT be found - it must be "venue.jpg".
+
+Until a file is present, the site shows a labelled "Asset pending" placeholder
+in its place. When running `npm run dev`, new files appear automatically.
+
+File                          Size (px)          Notes
+----------------------------  -----------------  ---------------------------------------
+designova-logo.png            ~1600 x 500        Transparent PNG. SUPPLIED.
+designova-logo.webp           same as the PNG    Faster copy of the logo (included).
+designova-logo-820.webp       820 wide           Phone-size copy (included).
+designova-logo.webp-source.txt                   Fingerprint of the PNG the WebPs came from. If you
+                                                 replace the PNG, the old WebPs are skipped
+                                                 automatically. After exporting new WebPs, delete
+                                                 this file.
+galgotias-logo.png            ~400 wide          Transparent PNG (footer).
+ieee-gusb-logo.png            ~400 wide          Transparent PNG (footer).
+ieee-cs-logo.png              ~400 wide          Transparent PNG (footer).
+team/<firstname-lastname>.jpg 600 x 600          One per committee member - see team/README.txt
+
+Tip: keep JPGs under ~250 KB (quality 75-80 is plenty). https://squoosh.app is free.
