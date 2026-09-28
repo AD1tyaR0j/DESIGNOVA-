@@ -8,7 +8,7 @@ import HudFrame from '../components/HudFrame';
 // One jagged fracture across the card, drawn when the card charges up.
 const FRACTURE = 'M0 62 L18 55 L24 63 L41 48 L47 57 L63 40 L70 49 L86 33 L100 38';
 
-function TrackModal({ track, stage, onClose, isRevealed, now, onToggleOverride, overrideReveal }) {
+function TrackModal({ track, stage, onClose, isRevealed, now }) {
   const [queueIndex, setQueueIndex] = useState(0);
   const [copied, setCopied] = useState(false);
 
@@ -126,13 +126,8 @@ ${current.expectedOutput}
                 )}
               </div>
               {isRevealed ? (
-                <p className="font-mono text-xs text-muted flex items-center gap-2">
-                  <span>PROBLEM QUEUE // <span className="text-gamma font-bold">{statements.length} STATEMENTS ONLINE</span> · USE ARROW KEYS [← →] TO NAVIGATE</span>
-                  {overrideReveal && (
-                    <span className="rounded border border-amber-500/50 bg-amber-500/15 px-2 py-0.2 text-[0.65rem] font-bold text-amber-300">
-                      [ORGANIZER PREVIEW ACTIVE]
-                    </span>
-                  )}
+                <p className="font-mono text-xs text-muted">
+                  PROBLEM QUEUE // <span className="text-gamma font-bold">{statements.length} STATEMENTS ONLINE</span> · USE ARROW KEYS [← →] TO NAVIGATE
                 </p>
               ) : (
                 <p className="font-mono text-xs text-amber-300 flex items-center gap-1.5">
@@ -429,16 +424,6 @@ ${current.expectedOutput}
                   <span>Close Window</span>
                   <span>✕</span>
                 </button>
-                {overrideReveal && (
-                  <button
-                    type="button"
-                    onClick={onToggleOverride}
-                    className="hidden sm:inline-flex items-center gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 font-mono text-[0.7rem] uppercase tracking-wider text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
-                    title="Lock the problem statements back into countdown mode"
-                  >
-                    <span>🔒 Re-lock Countdown</span>
-                  </button>
-                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -564,21 +549,6 @@ ${current.expectedOutput}
                   </ul>
                 </div>
               </div>
-
-              {/* Developer / Organizer Override Bypass Banner */}
-              <div className="rounded-lg border border-dashed border-white/25 bg-[#090b12] p-4 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-                <div className="flex items-center gap-2 text-muted">
-                  <span className="text-gamma font-bold">[TEST / ORGANIZER ACCESS]</span>
-                  <span>Want to preview problem statements ahead of the official countdown?</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={onToggleOverride}
-                  className="rounded border border-gamma/60 bg-gamma/20 px-3.5 py-1.5 text-gamma font-bold uppercase tracking-wider hover:bg-gamma hover:text-black transition-all cursor-pointer active:scale-95 shadow-[0_0_12px_rgba(57,255,20,0.3)]"
-                >
-                  ⚡ Override Protocol // Preview Statements
-                </button>
-              </div>
             </div>
 
             {/* Modal Bottom Action Footer in Locked Mode */}
@@ -591,13 +561,6 @@ ${current.expectedOutput}
                 >
                   <span>Close Window</span>
                   <span>✕</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={onToggleOverride}
-                  className="rounded border border-gamma/50 bg-gamma/15 px-3.5 py-2.5 font-mono text-xs text-gamma font-bold uppercase tracking-wider hover:bg-gamma hover:text-black transition-all cursor-pointer"
-                >
-                  <span>⚡ Preview Statements</span>
                 </button>
               </div>
 
@@ -744,30 +707,17 @@ export default function Tracks({ stage, index }) {
   const status = statusAt(now);
   const isAutoRevealed = status !== 'upcoming';
 
-  // Allow manual organizer/evaluator preview toggle (also checks URL param ?reveal=1 or ?preview=1)
-  const [overrideReveal, setOverrideReveal] = useState(() => {
+  // Optional silent preview via URL query (?preview=1 or ?reveal=1)
+  const isPreview = typeof window !== 'undefined' && (() => {
     try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('reveal') === '1' || params.get('preview') === '1') return true;
-      return localStorage.getItem('designova_preview_unlocked') === '1';
+      const p = new URLSearchParams(window.location.search);
+      return p.get('reveal') === '1' || p.get('preview') === '1';
     } catch {
       return false;
     }
-  });
+  })();
 
-  const isRevealed = isAutoRevealed || overrideReveal;
-
-  const toggleOverride = () => {
-    setOverrideReveal((prev) => {
-      const next = !prev;
-      try {
-        if (next) localStorage.setItem('designova_preview_unlocked', '1');
-        else localStorage.removeItem('designova_preview_unlocked');
-      } catch {}
-      return next;
-    });
-  };
-
+  const isRevealed = isAutoRevealed || isPreview;
   const remaining = Math.max(0, START - now);
   const parts = splitDuration(remaining);
 
@@ -799,14 +749,9 @@ export default function Tracks({ stage, index }) {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={toggleOverride}
-          className="rounded border border-white/20 bg-white/5 px-3 py-1 text-[0.7rem] uppercase tracking-wider text-muted hover:border-gamma hover:text-gamma transition-colors cursor-pointer"
-          title="Toggle preview of problem statements ahead of the official event countdown"
-        >
-          {overrideReveal ? '🔒 Re-lock Countdown' : '⚡ Organizer / Dev Preview'}
-        </button>
+        <div className="font-mono text-[0.68rem] text-muted uppercase tracking-widest">
+          {isRevealed ? 'All 6 tracks unlocked' : `Reveals at ${event.timeLabel.split('–')[0].trim()} IST`}
+        </div>
       </div>
 
       <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -832,8 +777,6 @@ export default function Tracks({ stage, index }) {
             onClose={() => setSelectedTrack(null)}
             isRevealed={isRevealed}
             now={now}
-            onToggleOverride={toggleOverride}
-            overrideReveal={overrideReveal}
           />
         )}
       </AnimatePresence>
