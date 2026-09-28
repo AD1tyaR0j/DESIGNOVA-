@@ -200,26 +200,43 @@ export const tracks = [
       {
         id: 'PS-01',
         title: 'The Problem Behind the Problem',
-        subtitle: 'Uncovering Normalized Pain Points Beneath Surface Complaints',
-        context: 'Students constantly complain: "The canteen is bad." "The portal is confusing." "The Wi-Fi doesn\'t work." "The process takes too long." Some problems are so common that students stop complaining about them and simply normalize them.',
-        challenge: 'Select one common complaint and discover the real underlying problem, OR discover a campus problem that users have normalized rather than reported.',
+        subtitle: 'Deconstructing Surface Complaints into Root Systemic Causes',
+        context: 'Students constantly complain: "The canteen is bad." "The portal is confusing." "The Wi-Fi doesn\'t work." "The process takes too long."',
+        challenge: 'Select one common complaint and discover the real underlying problem beneath the surface symptom.',
+        targetUser: 'Students and campus community members whose complaints are frequently dismissed or misdiagnosed by superficial fixes.',
+        deliverables: [
+          'Qualitative field inquiry comparing superficial complaints vs. real underlying blockers',
+          '5-Whys Root Cause Analysis mapping where the current system actually breaks down',
+          'Problem reframing manifesto converting the complaint into an actionable design opportunity',
+          'User empathy map highlighting the emotional impact of the root friction'
+        ],
+        focus: ['Root Cause Discovery', 'Problem Reframing', 'Deep Qualitative Inquiry'],
+        difficulty: 'Level 3 // Investigative UX Research',
+        expectedOutput: 'Problem Reframing Deck + 5-Whys Root Cause Map + Field Interview Findings'
+      },
+      {
+        id: 'PS-02',
+        title: 'The Unreported Problem',
+        subtitle: 'Discovering Normalized Campus Frictions & Hidden Unmet Needs',
+        context: 'Some problems are so common that students stop complaining about them and simply normalize them as inevitable realities.',
+        challenge: 'Discover a campus problem that users have normalized rather than reported.',
         researchQuestions: [
           'Who experiences it?',
-          'How frequently does it occur?',
-          'Why does it happen (root systemic cause)?',
+          'How frequently does it happen?',
+          'Why does it happen?',
           'Why hasn\'t it been solved yet?',
           'What is the actual unmet need?'
         ],
-        targetUser: 'Students and campus community members living with normalized daily frictions.',
+        targetUser: 'Campus cohorts living with normalized daily frictions they no longer actively report.',
         deliverables: [
-          'Qualitative field inquiry comparing superficial complaints vs. real underlying blockers',
-          'Evidence-backed answers to the 5 Core Research Questions',
-          '5-Whys Root Cause Analysis mapping the breakdown of current solutions',
-          'Actionable Unmet Need definition and UX intervention opportunity blueprint'
+          'Observational field research documenting an unvoiced, normalized campus problem',
+          'Evidence-backed answers answering all 5 Mandatory Research Proof Questions',
+          'Frequency & severity metrics proving the collective footprint of the issue',
+          'Actionable Unmet Need definition establishing what users actually require rather than what they tolerate'
         ],
-        focus: ['Root Cause Discovery', 'Normalized Friction', 'Deep Qualitative Inquiry'],
-        difficulty: 'Level 4 // Advanced Research',
-        expectedOutput: 'Research Synthesis Deck + 5-Whys Root Cause Map + Unmet Need Specification'
+        focus: ['Normalized Friction', 'Unmet Needs Discovery', 'Behavioral Fieldwork'],
+        difficulty: 'Level 4 // Advanced Field Research',
+        expectedOutput: 'Research Synthesis Deck + 5-Question Evidence Matrix + Unmet Need Specification'
       },
       {
         id: 'PS-03',
