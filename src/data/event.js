@@ -120,6 +120,24 @@ export const tracks = [
         expectedOutput: 'Interactive Mobile Prototype + Discovery Architecture Diagram + Design Rationale'
       },
       {
+        id: 'PS-02',
+        title: 'Survive Your First Week',
+        subtitle: 'Zero-Knowledge First-Year Campus Orientation & Onboarding',
+        context: 'Design a digital experience for a student entering university for the first time. The student needs to find classrooms, understand schedules, discover facilities, meet people, access academic information and understand campus processes.',
+        challenge: 'Create an interface that helps a first-year student become independently functional within their first week.',
+        constraint: 'Assume the student knows nothing about the campus ecosystem. You cannot rely on pre-existing knowledge of buildings, acronyms, or administrative hierarchies.',
+        targetUser: 'Incoming freshers, first-year undergraduate and postgraduate students, and campus newcomers.',
+        deliverables: [
+          'First-week progressive onboarding journey (day-by-day revelation of critical daily necessities)',
+          'Intuitive classroom finder & campus facilities wayfinding guide',
+          'Schedule decoder & academic process guide (clarifying credits, portals, and attendance rules)',
+          'Peer networking & student community discovery touchpoints'
+        ],
+        focus: ['First-Year Onboarding', 'Zero-Knowledge UX', 'Spatial Wayfinding', 'Process Simplification'],
+        difficulty: 'Level 3 // Core Challenge',
+        expectedOutput: 'Interactive Mobile Prototype + 7-Day Onboarding Architecture + User Journey Map'
+      },
+      {
         id: 'PS-03',
         title: 'The Deadline War',
         subtitle: 'Urgent vs. Important Attention Orchestration',
