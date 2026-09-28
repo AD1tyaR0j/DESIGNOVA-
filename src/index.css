@@ -363,10 +363,12 @@
 }
 .prize-card:hover .prize-crater {
   opacity: 1;
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 14px var(--tier));
 }
 .prize-crater {
-  opacity: 0.35;
-  transition: opacity 0.3s;
+  opacity: 0.88;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.3s ease;
 }
 
 /* --------------------------------------------------- Container queries
