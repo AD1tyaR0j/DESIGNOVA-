@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { tracks, confirmed, event } from '../data/event';
+import { START, statusAt, splitDuration, useNow } from '../lib/time';
 import Section from '../components/Section';
 import HudFrame from '../components/HudFrame';
 
 // One jagged fracture across the card, drawn when the card charges up.
 const FRACTURE = 'M0 62 L18 55 L24 63 L41 48 L47 57 L63 40 L70 49 L86 33 L100 38';
 
-function TrackModal({ track, stage, onClose }) {
+function TrackModal({ track, stage, onClose, isRevealed, now, onToggleOverride, overrideReveal }) {
   const [queueIndex, setQueueIndex] = useState(0);
   const [copied, setCopied] = useState(false);
 
   const statements = track.problemStatements || [];
   const current = statements[queueIndex] || {};
+  const remaining = Math.max(0, START - now);
+  const parts = splitDuration(remaining);
 
   const handleNext = useCallback(() => {
     if (statements.length > 0) {
@@ -36,9 +39,9 @@ function TrackModal({ track, stage, onClose }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         onClose();
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === 'ArrowRight' && isRevealed) {
         handleNext();
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft' && isRevealed) {
         handlePrev();
       }
     };
@@ -49,7 +52,7 @@ function TrackModal({ track, stage, onClose }) {
       document.documentElement.style.overflow = originalHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose, handleNext, handlePrev]);
+  }, [onClose, handleNext, handlePrev, isRevealed]);
 
   const handleCopy = () => {
     if (!current.title) return;
@@ -122,9 +125,21 @@ ${current.expectedOutput}
                   </span>
                 )}
               </div>
-              <p className="font-mono text-xs text-muted">
-                PROBLEM QUEUE // <span className="text-gamma font-bold">{statements.length} STATEMENTS ONLINE</span> · USE ARROW KEYS [← →] TO NAVIGATE
-              </p>
+              {isRevealed ? (
+                <p className="font-mono text-xs text-muted flex items-center gap-2">
+                  <span>PROBLEM QUEUE // <span className="text-gamma font-bold">{statements.length} STATEMENTS ONLINE</span> · USE ARROW KEYS [← →] TO NAVIGATE</span>
+                  {overrideReveal && (
+                    <span className="rounded border border-amber-500/50 bg-amber-500/15 px-2 py-0.2 text-[0.65rem] font-bold text-amber-300">
+                      [ORGANIZER PREVIEW ACTIVE]
+                    </span>
+                  )}
+                </p>
+              ) : (
+                <p className="font-mono text-xs text-amber-300 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span>ACCESS RESTRICTED // DECRYPTS LIVE AT OFFICIAL EVENT IGNITION (14:00 IST)</span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -144,302 +159,468 @@ ${current.expectedOutput}
           </div>
         </div>
 
-        {/* Queue Switcher Bar */}
-        <div className="border-b border-white/15 bg-[#090b12] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 overflow-x-auto py-1 terminal-scroll min-w-0 flex-1">
-            <span className="shrink-0 font-mono text-[0.7rem] uppercase tracking-widest text-gamma font-bold mr-1 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-gamma animate-pulse" />
-              <span>QUEUE:</span>
-            </span>
-            {statements.map((s, idx) => {
-              const isActive = idx === queueIndex;
-              return (
+        {/* REVEALED CONTENT: When Countdown Stops or Override is Active */}
+        {isRevealed ? (
+          <>
+            {/* Queue Switcher Bar */}
+            <div className="border-b border-white/15 bg-[#090b12] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 overflow-x-auto py-1 terminal-scroll min-w-0 flex-1">
+                <span className="shrink-0 font-mono text-[0.7rem] uppercase tracking-widest text-gamma font-bold mr-1 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-gamma animate-pulse" />
+                  <span>QUEUE:</span>
+                </span>
+                {statements.map((s, idx) => {
+                  const isActive = idx === queueIndex;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setQueueIndex(idx)}
+                      className={`group shrink-0 flex items-center gap-2 rounded px-3 py-1.5 font-mono text-xs transition-all cursor-pointer ${
+                        isActive
+                          ? 'border-2 border-gamma bg-gamma/25 text-white font-bold shadow-[0_0_16px_rgba(57,255,20,0.4)]'
+                          : 'border border-white/20 bg-panel text-muted hover:border-gamma/60 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <span className={`inline-block h-2 w-2 rounded-full ${isActive ? 'bg-gamma shadow-[0_0_8px_#39ff14]' : 'bg-white/30'}`} />
+                      <span className={isActive ? 'text-white font-bold' : ''}>{s.id}</span>
+                      <span className="text-[0.72rem] opacity-90 truncate max-w-[130px] sm:max-w-[200px]">
+                        · {s.title}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Quick Prev / Next Controls */}
+              <div className="flex items-center gap-1.5 font-mono text-xs shrink-0 pl-2 border-l border-white/10">
                 <button
-                  key={s.id}
                   type="button"
-                  onClick={() => setQueueIndex(idx)}
-                  className={`group shrink-0 flex items-center gap-2 rounded px-3 py-1.5 font-mono text-xs transition-all cursor-pointer ${
-                    isActive
-                      ? 'border-2 border-gamma bg-gamma/25 text-white font-bold shadow-[0_0_16px_rgba(57,255,20,0.4)]'
-                      : 'border border-white/20 bg-panel text-muted hover:border-gamma/60 hover:text-white hover:bg-white/5'
-                  }`}
+                  onClick={handlePrev}
+                  className="rounded border border-white/20 bg-white/5 px-2.5 sm:px-3 py-1.5 text-ink transition-colors hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer font-bold"
+                  title="Previous Statement (Left Arrow)"
+                  aria-label="Previous Statement"
                 >
-                  <span className={`inline-block h-2 w-2 rounded-full ${isActive ? 'bg-gamma shadow-[0_0_8px_#39ff14]' : 'bg-white/30'}`} />
-                  <span className={isActive ? 'text-white font-bold' : ''}>{s.id}</span>
-                  <span className="text-[0.72rem] opacity-90 truncate max-w-[130px] sm:max-w-[200px]">
-                    · {s.title}
-                  </span>
+                  ← Prev
                 </button>
-              );
-            })}
-          </div>
+                <span className="px-1.5 text-xs text-gamma font-bold tabular-nums">
+                  {queueIndex + 1}/{statements.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="rounded border border-white/20 bg-white/5 px-2.5 sm:px-3 py-1.5 text-ink transition-colors hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer font-bold"
+                  title="Next Statement (Right Arrow)"
+                  aria-label="Next Statement"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
 
-          {/* Quick Prev / Next Controls */}
-          <div className="flex items-center gap-1.5 font-mono text-xs shrink-0 pl-2 border-l border-white/10">
-            <button
-              type="button"
-              onClick={handlePrev}
-              className="rounded border border-white/20 bg-white/5 px-2.5 sm:px-3 py-1.5 text-ink transition-colors hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer font-bold"
-              title="Previous Statement (Left Arrow)"
-              aria-label="Previous Statement"
-            >
-              ← Prev
-            </button>
-            <span className="px-1.5 text-xs text-gamma font-bold tabular-nums">
-              {queueIndex + 1}/{statements.length}
-            </span>
-            <button
-              type="button"
-              onClick={handleNext}
-              className="rounded border border-white/20 bg-white/5 px-2.5 sm:px-3 py-1.5 text-ink transition-colors hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer font-bold"
-              title="Next Statement (Right Arrow)"
-              aria-label="Next Statement"
-            >
-              Next →
-            </button>
-          </div>
-        </div>
+            {/* Scrollable Problem Statement Content */}
+            <div className="terminal-scroll flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6 bg-gradient-to-b from-[#07090e] via-[#090c14] to-[#07090e]">
+              <AnimatePresence mode="wait">
+                <m.div
+                  key={current.id || queueIndex}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
+                >
+                  {/* Title & Metadata Header */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-wider">
+                      <span className="rounded bg-gamma/20 border-2 border-gamma px-2.5 py-1 text-white font-black shadow-[0_0_12px_rgba(57,255,20,0.3)]">
+                        STATEMENT {current.id}
+                      </span>
+                      <span className="rounded bg-white/10 border border-white/25 px-2.5 py-1 text-white font-bold">
+                        {current.difficulty}
+                      </span>
+                      <span className="rounded bg-accent/15 border border-accent/40 px-2.5 py-1 text-accent-text font-bold">
+                        TRACK // {track.code}
+                      </span>
+                    </div>
 
-        {/* Scrollable Problem Statement Content */}
-        <div className="terminal-scroll flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6 bg-gradient-to-b from-[#07090e] via-[#090c14] to-[#07090e]">
-          <AnimatePresence mode="wait">
-            <m.div
-              key={current.id || queueIndex}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-6"
-            >
-              {/* Title & Metadata Header */}
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-wider">
-                  <span className="rounded bg-gamma/20 border-2 border-gamma px-2.5 py-1 text-white font-black shadow-[0_0_12px_rgba(57,255,20,0.3)]">
-                    STATEMENT {current.id}
-                  </span>
-                  <span className="rounded bg-white/10 border border-white/25 px-2.5 py-1 text-white font-bold">
-                    {current.difficulty}
-                  </span>
-                  <span className="rounded bg-accent/15 border border-accent/40 px-2.5 py-1 text-accent-text font-bold">
-                    TRACK // {track.code}
-                  </span>
-                </div>
+                    <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-tight leading-tight" style={{ fontStretch: '86%' }}>
+                      {current.title}
+                    </h3>
+                    {current.subtitle && (
+                      <p className="font-mono text-xs sm:text-base text-gamma font-bold uppercase tracking-widest">
+                        // {current.subtitle}
+                      </p>
+                    )}
+                  </div>
 
-                <h3 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-tight leading-tight" style={{ fontStretch: '86%' }}>
-                  {current.title}
-                </h3>
-                {current.subtitle && (
-                  <p className="font-mono text-xs sm:text-base text-gamma font-bold uppercase tracking-widest">
-                    // {current.subtitle}
-                  </p>
+                  {/* Real-World Context If Present */}
+                  {current.context && (
+                    <div className="rounded-lg border-2 border-white/20 bg-[#101420] p-4 sm:p-5 text-sm sm:text-base text-ink font-mono shadow-md leading-relaxed">
+                      <span className="text-gamma font-bold uppercase tracking-wider block mb-1.5 text-xs flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-gamma" />
+                        <span>PROBLEM CONTEXT & BACKGROUND</span>
+                      </span>
+                      {current.context}
+                    </div>
+                  )}
+
+                  {/* Challenge Mission Brief Box */}
+                  <div className="relative overflow-hidden border-2 border-gamma bg-[#0b1018] p-5 sm:p-7 shadow-[0_0_35px_rgba(57,255,20,0.2)]">
+                    <div className="absolute top-0 right-0 h-5 w-5 border-t-2 border-r-2 border-gamma" />
+                    <div className="absolute bottom-0 left-0 h-5 w-5 border-b-2 border-l-2 border-gamma" />
+
+                    <div className="flex items-center gap-2 border-b border-gamma/30 pb-2.5 mb-3.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-gamma animate-ping" />
+                      <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest text-gamma">
+                        MISSION CHALLENGE BRIEF
+                      </h4>
+                    </div>
+                    <p className="leading-relaxed text-white text-base sm:text-xl md:text-2xl font-bold tracking-tight">
+                      {current.challenge}
+                    </p>
+                  </div>
+
+                  {/* Critical Constraint Box If Present */}
+                  {current.constraint && (
+                    <div className="rounded-lg border-2 border-amber-500/70 bg-amber-500/15 p-4 sm:p-5 shadow-[0_0_24px_rgba(245,158,11,0.18)]">
+                      <div className="flex items-center gap-2 mb-2 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse" />
+                        <span>⚠️ CRITICAL DESIGN CONSTRAINT</span>
+                      </div>
+                      <p className="text-sm sm:text-base leading-relaxed text-amber-100 font-mono font-medium">
+                        {current.constraint}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Research Questions Mandate If Present */}
+                  {current.researchQuestions && current.researchQuestions.length > 0 && (
+                    <div className="rounded-lg border-2 border-gamma/60 bg-gamma/15 p-4 sm:p-5 shadow-[0_0_24px_rgba(57,255,20,0.14)]">
+                      <div className="flex items-center gap-2 mb-2.5 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-gamma">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-gamma animate-pulse" />
+                        <span>RESEARCH MANDATE // PARTICIPANTS MUST PROVE:</span>
+                      </div>
+                      <ul className="grid gap-2.5 sm:grid-cols-2 text-xs sm:text-sm text-white font-mono">
+                        {current.researchQuestions.map((q, i) => (
+                          <li key={i} className="flex items-start gap-2.5 rounded border border-gamma/30 bg-black/40 p-2.5">
+                            <span className="text-gamma font-black shrink-0">[{i + 1}]</span>
+                            <span className="font-medium">{q}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Research Directive Note If Present */}
+                  {current.note && (
+                    <div className="rounded-lg border-2 border-cyan-500/50 bg-cyan-500/15 p-4 text-xs sm:text-sm text-cyan-100 font-mono flex items-start gap-3 shadow-md">
+                      <span className="text-cyan-300 font-bold shrink-0">[RESEARCH DIRECTIVE]</span>
+                      <span className="leading-relaxed font-medium">{current.note}</span>
+                    </div>
+                  )}
+
+                  {/* Mandatory System States / Demonstrations If Present */}
+                  {current.requiredStates && current.requiredStates.length > 0 && (
+                    <div className="rounded-lg border-2 border-purple-500/50 bg-purple-500/15 p-4 sm:p-5 shadow-[0_0_25px_rgba(168,85,247,0.18)]">
+                      <div className="flex items-center gap-2 mb-3 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-purple-300">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-purple-400 animate-pulse" />
+                        <span>{current.requiredStatesTitle || 'MANDATORY SYSTEM STATES // MUST FORM ONE COHERENT LANGUAGE:'}</span>
+                      </div>
+                      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 text-xs sm:text-sm text-white font-mono">
+                        {current.requiredStates.map((state, idx) => (
+                          <div key={idx} className="flex items-center gap-2.5 rounded border border-purple-500/40 bg-black/60 px-3.5 py-2.5 shadow-sm">
+                            <span className="text-purple-400 font-black shrink-0">0{idx + 1}.</span>
+                            <span className="text-purple-100 font-semibold">{state}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Target User & Context */}
+                  {current.targetUser && (
+                    <div className="rounded-lg border-2 border-white/15 bg-[#101420] p-4 sm:p-5">
+                      <span className="block font-mono text-xs uppercase tracking-widest text-muted mb-1 font-bold">
+                        PRIMARY STAKEHOLDERS & TARGET AUDIENCE:
+                      </span>
+                      <p className="font-mono text-xs sm:text-sm text-white font-medium">
+                        {current.targetUser}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Key Deliverables Checklist */}
+                  {current.deliverables && current.deliverables.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest text-accent-text flex items-center gap-2">
+                        <span>SPECIFICATION REQUIREMENTS // DELIVERABLES</span>
+                        <span className="h-px flex-1 bg-white/15" />
+                      </h4>
+                      <div className="grid gap-2.5 sm:grid-cols-2">
+                        {current.deliverables.map((d, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-3 rounded-lg border-2 border-white/15 bg-[#101420] p-3.5 transition-colors hover:border-gamma/60 hover:bg-[#131928]"
+                          >
+                            <span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-gamma bg-gamma/20 font-mono text-xs font-black text-gamma mt-0.5">
+                              ✓
+                            </span>
+                            <span className="text-xs sm:text-sm leading-relaxed text-white font-medium">
+                              {d}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Evaluation Focus & Output */}
+                  <div className="grid gap-3 sm:grid-cols-2 pt-2">
+                    {current.focus && (
+                      <div className="rounded-lg border-2 border-white/15 bg-[#101420] p-4">
+                        <span className="block font-mono text-xs uppercase tracking-widest text-muted mb-2 font-bold">
+                          CORE EVALUATION CRITERIA:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {current.focus.map((f, i) => (
+                            <span key={i} className="rounded border border-gamma/60 bg-gamma/15 px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-gamma font-bold">
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {current.expectedOutput && (
+                      <div className="rounded-lg border-2 border-white/15 bg-[#101420] p-4">
+                        <span className="block font-mono text-xs uppercase tracking-widest text-muted mb-1 font-bold">
+                          EXPECTED SUBMISSION FORMAT:
+                        </span>
+                        <p className="font-mono text-xs sm:text-sm text-white font-medium">
+                          {current.expectedOutput}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </m.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Modal Bottom Action Footer */}
+            <div className="border-t border-gamma/25 bg-[#0e111a] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="flex items-center gap-2 rounded border-2 border-white/25 bg-white/10 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-white transition-all hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer"
+                >
+                  <span>{copied ? '✓ COPIED BRIEF' : '📋 COPY BRIEF'}</span>
+                </button>
+                {copied && (
+                  <span className="font-mono text-xs text-gamma font-bold animate-pulse">
+                    Copied to clipboard!
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex items-center gap-1.5 rounded border border-white/20 bg-white/5 px-3 py-2.5 font-mono text-xs uppercase tracking-wider text-ink/80 transition-all hover:border-white hover:text-white active:scale-95 cursor-pointer"
+                >
+                  <span>Close Window</span>
+                  <span>✕</span>
+                </button>
+                {overrideReveal && (
+                  <button
+                    type="button"
+                    onClick={onToggleOverride}
+                    className="hidden sm:inline-flex items-center gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 font-mono text-[0.7rem] uppercase tracking-wider text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer"
+                    title="Lock the problem statements back into countdown mode"
+                  >
+                    <span>🔒 Re-lock Countdown</span>
+                  </button>
                 )}
               </div>
 
-              {/* Real-World Context If Present */}
-              {current.context && (
-                <div className="rounded-lg border-2 border-white/20 bg-[#101420] p-4 sm:p-5 text-sm sm:text-base text-ink font-mono shadow-md leading-relaxed">
-                  <span className="text-gamma font-bold uppercase tracking-wider block mb-1.5 text-xs flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-gamma" />
-                    <span>PROBLEM CONTEXT & BACKGROUND</span>
-                  </span>
-                  {current.context}
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="hidden xs:flex items-center gap-1.5 rounded border border-white/20 bg-white/5 px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-white hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer font-bold"
+                >
+                  <span>Next Statement</span>
+                  <span>→</span>
+                </button>
 
-              {/* Challenge Mission Brief Box */}
-              <div className="relative overflow-hidden border-2 border-gamma bg-[#0b1018] p-5 sm:p-7 shadow-[0_0_35px_rgba(57,255,20,0.2)]">
-                <div className="absolute top-0 right-0 h-5 w-5 border-t-2 border-r-2 border-gamma" />
-                <div className="absolute bottom-0 left-0 h-5 w-5 border-b-2 border-l-2 border-gamma" />
+                <a
+                  href={event.registration?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded border-2 border-gamma bg-gamma px-5 py-2.5 font-mono text-xs font-black uppercase tracking-wider text-black shadow-[0_0_20px_rgba(57,255,20,0.5)] transition-all hover:bg-white hover:border-white hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] active:scale-95 cursor-pointer"
+                >
+                  <span>Register For Event</span>
+                  <span>⚡</span>
+                </a>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* CLASSIFIED COUNTDOWN TERMINAL: When Countdown is Running Ahead of Event Start */
+          <>
+            <div className="terminal-scroll flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6 bg-gradient-to-b from-[#07090e] via-[#090c14] to-[#07090e]">
+              {/* Classified Security Shield Card */}
+              <div className="rounded-xl border-2 border-amber-500/60 bg-gradient-to-b from-amber-500/15 via-[#0c0f18] to-black/90 p-6 sm:p-8 shadow-[0_0_50px_rgba(245,158,11,0.22)] text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 h-6 w-6 border-t-2 border-r-2 border-amber-400" />
+                <div className="absolute bottom-0 left-0 h-6 w-6 border-b-2 border-l-2 border-amber-400" />
 
-                <div className="flex items-center gap-2 border-b border-gamma/30 pb-2.5 mb-3.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-gamma animate-ping" />
-                  <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest text-gamma">
-                    MISSION CHALLENGE BRIEF
-                  </h4>
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-400/15 px-3.5 py-1 font-mono text-xs font-bold uppercase tracking-widest text-amber-300 mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
+                  <span>LEVEL 5 SECURITY PROTOCOL // ACCESS RESTRICTED</span>
                 </div>
-                <p className="leading-relaxed text-white text-base sm:text-xl md:text-2xl font-bold tracking-tight">
-                  {current.challenge}
+
+                <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black uppercase text-white tracking-wide" style={{ fontStretch: '86%' }}>
+                  PROBLEM STATEMENTS CLASSIFIED
+                </h3>
+                <p className="mt-2.5 text-xs sm:text-sm text-amber-100/90 font-mono max-w-2xl mx-auto leading-relaxed">
+                  The official challenge briefs for <span className="text-white font-bold">{track.title}</span> are encrypted.
+                  Statements will automatically decrypt live in this window the exact second the countdown reaches zero at official event ignition.
                 </p>
+
+                {/* High-Impact Live Countdown Timer */}
+                <div className="mt-6 inline-block max-w-xl w-full">
+                  <div className="grid grid-cols-4 gap-2 sm:gap-3 font-mono">
+                    {[
+                      ['DAYS', parts.days],
+                      ['HOURS', parts.hours],
+                      ['MINUTES', parts.minutes],
+                      ['SECONDS', parts.seconds],
+                    ].map(([label, val]) => (
+                      <div key={label} className="rounded-lg border-2 border-amber-500/40 bg-black/70 p-2.5 sm:p-4 text-center shadow-[inset_0_0_15px_rgba(245,158,11,0.15)]">
+                        <span className="block font-display text-2xl sm:text-4xl lg:text-5xl font-black tabular-nums text-amber-300" style={{ fontStretch: '84%' }}>
+                          {String(val).padStart(2, '0')}
+                        </span>
+                        <span className="mt-1 block text-[0.62rem] sm:text-[0.72rem] uppercase tracking-widest text-amber-400/80 font-bold">
+                          {label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3.5 font-mono text-[0.7rem] sm:text-xs text-amber-300/80 uppercase tracking-widest">
+                    DECRYPTION TARGET: {event.dateLabel} · {event.timeLabel.split('–')[0].trim()} IST
+                  </p>
+                </div>
               </div>
 
-              {/* Critical Constraint Box If Present */}
-              {current.constraint && (
-                <div className="rounded-lg border-2 border-amber-500/70 bg-amber-500/15 p-4 sm:p-5 shadow-[0_0_24px_rgba(245,158,11,0.18)]">
-                  <div className="flex items-center gap-2 mb-2 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse" />
-                    <span>⚠️ CRITICAL DESIGN CONSTRAINT</span>
-                  </div>
-                  <p className="text-sm sm:text-base leading-relaxed text-amber-100 font-mono font-medium">
-                    {current.constraint}
-                  </p>
-                </div>
-              )}
-
-              {/* Research Questions Mandate If Present */}
-              {current.researchQuestions && current.researchQuestions.length > 0 && (
-                <div className="rounded-lg border-2 border-gamma/60 bg-gamma/15 p-4 sm:p-5 shadow-[0_0_24px_rgba(57,255,20,0.14)]">
-                  <div className="flex items-center gap-2 mb-2.5 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-gamma">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-gamma animate-pulse" />
-                    <span>RESEARCH MANDATE // PARTICIPANTS MUST PROVE:</span>
-                  </div>
-                  <ul className="grid gap-2.5 sm:grid-cols-2 text-xs sm:text-sm text-white font-mono">
-                    {current.researchQuestions.map((q, i) => (
-                      <li key={i} className="flex items-start gap-2.5 rounded border border-gamma/30 bg-black/40 p-2.5">
-                        <span className="text-gamma font-black shrink-0">[{i + 1}]</span>
-                        <span className="font-medium">{q}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Research Directive Note If Present */}
-              {current.note && (
-                <div className="rounded-lg border-2 border-cyan-500/50 bg-cyan-500/15 p-4 text-xs sm:text-sm text-cyan-100 font-mono flex items-start gap-3 shadow-md">
-                  <span className="text-cyan-300 font-bold shrink-0">[RESEARCH DIRECTIVE]</span>
-                  <span className="leading-relaxed font-medium">{current.note}</span>
-                </div>
-              )}
-
-              {/* Mandatory System States / Demonstrations If Present */}
-              {current.requiredStates && current.requiredStates.length > 0 && (
-                <div className="rounded-lg border-2 border-purple-500/50 bg-purple-500/15 p-4 sm:p-5 shadow-[0_0_25px_rgba(168,85,247,0.18)]">
-                  <div className="flex items-center gap-2 mb-3 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-purple-300">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-purple-400 animate-pulse" />
-                    <span>{current.requiredStatesTitle || 'MANDATORY SYSTEM STATES // MUST FORM ONE COHERENT LANGUAGE:'}</span>
-                  </div>
-                  <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 text-xs sm:text-sm text-white font-mono">
-                    {current.requiredStates.map((state, idx) => (
-                      <div key={idx} className="flex items-center gap-2.5 rounded border border-purple-500/40 bg-black/60 px-3.5 py-2.5 shadow-sm">
-                        <span className="text-purple-400 font-black shrink-0">0{idx + 1}.</span>
-                        <span className="text-purple-100 font-semibold">{state}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Target User & Context */}
-              {current.targetUser && (
-                <div className="rounded-lg border-2 border-white/15 bg-[#101420] p-4 sm:p-5">
-                  <span className="block font-mono text-xs uppercase tracking-widest text-muted mb-1 font-bold">
-                    PRIMARY STAKEHOLDERS & TARGET AUDIENCE:
+              {/* Track Domain Dossier & Preparation (What users can study while waiting) */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-xl border-2 border-white/15 bg-[#101420] p-5 space-y-3 shadow-md">
+                  <span className="text-gamma font-bold uppercase tracking-wider block text-xs flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-gamma" />
+                    <span>TRACK DOMAIN & MISSION OVERVIEW</span>
                   </span>
-                  <p className="font-mono text-xs sm:text-sm text-white font-medium">
-                    {current.targetUser}
+                  <p className="text-sm sm:text-base text-ink leading-relaxed">
+                    {track.text}
                   </p>
-                </div>
-              )}
-
-              {/* Key Deliverables Checklist */}
-              {current.deliverables && current.deliverables.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest text-accent-text flex items-center gap-2">
-                    <span>SPECIFICATION REQUIREMENTS // DELIVERABLES</span>
-                    <span className="h-px flex-1 bg-white/15" />
-                  </h4>
-                  <div className="grid gap-2.5 sm:grid-cols-2">
-                    {current.deliverables.map((d, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-3 rounded-lg border-2 border-white/15 bg-[#101420] p-3.5 transition-colors hover:border-gamma/60 hover:bg-[#131928]"
-                      >
-                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded border border-gamma bg-gamma/20 font-mono text-xs font-black text-gamma mt-0.5">
-                          ✓
-                        </span>
-                        <span className="text-xs sm:text-sm leading-relaxed text-white font-medium">
-                          {d}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Evaluation Focus & Output */}
-              <div className="grid gap-3 sm:grid-cols-2 pt-2">
-                {current.focus && (
-                  <div className="rounded-lg border-2 border-white/15 bg-[#101420] p-4">
-                    <span className="block font-mono text-xs uppercase tracking-widest text-muted mb-2 font-bold">
-                      CORE EVALUATION CRITERIA:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {current.focus.map((f, i) => (
-                        <span key={i} className="rounded border border-gamma/60 bg-gamma/15 px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-gamma font-bold">
-                          {f}
+                  {track.stone && (
+                    <div className="pt-2 flex items-center gap-2 font-mono text-xs text-gamma">
+                      <span className="font-bold">INFINITY STONE ATTRIBUTE:</span>
+                      <span className="rounded border border-gamma/60 bg-gamma/15 px-2.5 py-0.5 uppercase tracking-wider font-semibold">
+                        {track.stone}
+                      </span>
+                    </div>
+                  )}
+                  {track.tags && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {track.tags.map(tag => (
+                        <span key={tag} className="rounded border border-white/20 bg-white/5 px-2.5 py-0.5 font-mono text-[0.68rem] uppercase tracking-wider text-muted">
+                          {tag}
                         </span>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {current.expectedOutput && (
-                  <div className="rounded-lg border-2 border-white/15 bg-[#101420] p-4">
-                    <span className="block font-mono text-xs uppercase tracking-widest text-muted mb-1 font-bold">
-                      EXPECTED SUBMISSION FORMAT:
-                    </span>
-                    <p className="font-mono text-xs sm:text-sm text-white font-medium">
-                      {current.expectedOutput}
-                    </p>
-                  </div>
-                )}
+                <div className="rounded-xl border-2 border-white/15 bg-[#101420] p-5 space-y-3 shadow-md">
+                  <span className="text-accent-text font-bold uppercase tracking-wider block text-xs flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-accent" />
+                    <span>PRE-IGNITION PREPARATION CHECKLIST</span>
+                  </span>
+                  <ul className="space-y-2.5 font-mono text-xs sm:text-sm text-ink/90">
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-gamma font-black">01.</span>
+                      <span>Confirm your team registration & verification (2–3 members).</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-gamma font-black">02.</span>
+                      <span>Configure design workstations (Figma, Framer, Blender, Rive, etc.).</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-gamma font-black">03.</span>
+                      <span>Study core judging metrics: UX Usability 25%, Research 20%, Visuals 20%.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-gamma font-black">04.</span>
+                      <span>Keep this window open: statements automatically reveal live when countdown stops!</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
-            </m.div>
-          </AnimatePresence>
-        </div>
 
-        {/* Modal Bottom Action Footer */}
-        <div className="border-t border-gamma/25 bg-[#0e111a] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="flex items-center gap-2 rounded border-2 border-white/25 bg-white/10 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-white transition-all hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer"
-            >
-              <span>{copied ? '✓ COPIED BRIEF' : '📋 COPY BRIEF'}</span>
-            </button>
-            {copied && (
-              <span className="font-mono text-xs text-gamma font-bold animate-pulse">
-                Copied to clipboard!
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex items-center gap-1.5 rounded border border-white/20 bg-white/5 px-3 py-2.5 font-mono text-xs uppercase tracking-wider text-ink/80 transition-all hover:border-white hover:text-white active:scale-95 cursor-pointer"
-            >
-              <span>Close Window</span>
-              <span>✕</span>
-            </button>
-          </div>
+              {/* Developer / Organizer Override Bypass Banner */}
+              <div className="rounded-lg border border-dashed border-white/25 bg-[#090b12] p-4 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                <div className="flex items-center gap-2 text-muted">
+                  <span className="text-gamma font-bold">[TEST / ORGANIZER ACCESS]</span>
+                  <span>Want to preview problem statements ahead of the official countdown?</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onToggleOverride}
+                  className="rounded border border-gamma/60 bg-gamma/20 px-3.5 py-1.5 text-gamma font-bold uppercase tracking-wider hover:bg-gamma hover:text-black transition-all cursor-pointer active:scale-95 shadow-[0_0_12px_rgba(57,255,20,0.3)]"
+                >
+                  ⚡ Override Protocol // Preview Statements
+                </button>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleNext}
-              className="hidden xs:flex items-center gap-1.5 rounded border border-white/20 bg-white/5 px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-white hover:border-gamma hover:text-gamma hover:bg-gamma/10 active:scale-95 cursor-pointer font-bold"
-            >
-              <span>Next Statement</span>
-              <span>→</span>
-            </button>
+            {/* Modal Bottom Action Footer in Locked Mode */}
+            <div className="border-t border-gamma/25 bg-[#0e111a] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex items-center gap-1.5 rounded border border-white/20 bg-white/5 px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-ink/80 transition-all hover:border-white hover:text-white active:scale-95 cursor-pointer"
+                >
+                  <span>Close Window</span>
+                  <span>✕</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggleOverride}
+                  className="rounded border border-gamma/50 bg-gamma/15 px-3.5 py-2.5 font-mono text-xs text-gamma font-bold uppercase tracking-wider hover:bg-gamma hover:text-black transition-all cursor-pointer"
+                >
+                  <span>⚡ Preview Statements</span>
+                </button>
+              </div>
 
-            <a
-              href={event.registration?.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded border-2 border-gamma bg-gamma px-5 py-2.5 font-mono text-xs font-black uppercase tracking-wider text-black shadow-[0_0_20px_rgba(57,255,20,0.5)] transition-all hover:bg-white hover:border-white hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] active:scale-95 cursor-pointer"
-            >
-              <span>Register For Event</span>
-              <span>⚡</span>
-            </a>
-          </div>
-        </div>
+              <div className="flex items-center gap-3">
+                <a
+                  href={event.registration?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded border-2 border-gamma bg-gamma px-5 py-2.5 font-mono text-xs font-black uppercase tracking-wider text-black shadow-[0_0_20px_rgba(57,255,20,0.5)] transition-all hover:bg-white hover:border-white hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] active:scale-95 cursor-pointer"
+                >
+                  <span>Register For Event</span>
+                  <span>⚡</span>
+                </a>
+              </div>
+            </div>
+          </>
+        )}
       </m.div>
     </m.div>
   );
 }
 
-function TrackCard({ track, i, stage, onSelect }) {
+function TrackCard({ track, i, stage, onSelect, isRevealed, now }) {
   const ref = useRef(null);
   const [charged, setCharged] = useState(false);
 
@@ -452,6 +633,8 @@ function TrackCard({ track, i, stage, onSelect }) {
   }, []);
 
   const statementCount = track.problemStatements?.length || 0;
+  const remaining = Math.max(0, START - now);
+  const parts = splitDuration(remaining);
 
   return (
     <m.li
@@ -491,9 +674,17 @@ function TrackCard({ track, i, stage, onSelect }) {
                 <span className="grid h-12 w-12 shrink-0 place-items-center border border-accent/60 font-mono text-sm font-bold text-accent-text transition-colors group-hover:border-gamma group-hover:text-gamma group-hover:bg-gamma/10">
                   {track.code}
                 </span>
-                <span className="rounded border border-gamma/40 bg-gamma/10 px-2 py-0.5 font-mono text-[0.62rem] uppercase tracking-widest text-gamma font-bold">
-                  {statementCount} Statements in Queue
-                </span>
+
+                {isRevealed ? (
+                  <span className="rounded border border-gamma/40 bg-gamma/10 px-2 py-0.5 font-mono text-[0.62rem] uppercase tracking-widest text-gamma font-bold">
+                    ⚡ {statementCount} Statements Online
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 rounded border border-amber-500/50 bg-amber-500/10 px-2 py-0.5 font-mono text-[0.62rem] uppercase tracking-wider text-amber-300 font-bold">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>🔒 {String(parts.hours).padStart(2, '0')}:{String(parts.minutes).padStart(2, '0')}:{String(parts.seconds).padStart(2, '0')}</span>
+                  </span>
+                )}
               </div>
 
               <div>
@@ -518,13 +709,27 @@ function TrackCard({ track, i, stage, onSelect }) {
 
             {/* Click to Open Problem Statements Queue Banner */}
             <div className="mt-5 pt-3.5 border-t border-white/10 flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-wider text-gamma/90 group-hover:text-gamma flex items-center gap-1.5 font-bold">
-                <span>⚡ View Problem Queue</span>
-                <span className="transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-0.5">↗</span>
-              </span>
-              <span className="rounded bg-white/5 border border-white/15 group-hover:border-gamma/60 px-2 py-0.5 font-mono text-[0.62rem] text-ink/80 group-hover:text-gamma uppercase tracking-wider transition-colors">
-                Click to expand
-              </span>
+              {isRevealed ? (
+                <>
+                  <span className="font-mono text-xs uppercase tracking-wider text-gamma/90 group-hover:text-gamma flex items-center gap-1.5 font-bold">
+                    <span>⚡ View Problem Queue</span>
+                    <span className="transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-0.5">↗</span>
+                  </span>
+                  <span className="rounded bg-white/5 border border-white/15 group-hover:border-gamma/60 px-2 py-0.5 font-mono text-[0.62rem] text-ink/80 group-hover:text-gamma uppercase tracking-wider transition-colors">
+                    Click to expand
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-mono text-xs uppercase tracking-wider text-amber-300 group-hover:text-amber-200 flex items-center gap-1.5 font-bold">
+                    <span>🔒 Statements Classified</span>
+                    <span className="transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-0.5">↗</span>
+                  </span>
+                  <span className="rounded bg-amber-500/10 border border-amber-500/30 group-hover:border-amber-400 px-2 py-0.5 font-mono text-[0.62rem] text-amber-200 uppercase tracking-wider transition-colors">
+                    View Countdown
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </HudFrame>
@@ -535,6 +740,36 @@ function TrackCard({ track, i, stage, onSelect }) {
 
 export default function Tracks({ stage, index }) {
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const now = useNow(1000);
+  const status = statusAt(now);
+  const isAutoRevealed = status !== 'upcoming';
+
+  // Allow manual organizer/evaluator preview toggle (also checks URL param ?reveal=1 or ?preview=1)
+  const [overrideReveal, setOverrideReveal] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('reveal') === '1' || params.get('preview') === '1') return true;
+      return localStorage.getItem('designova_preview_unlocked') === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const isRevealed = isAutoRevealed || overrideReveal;
+
+  const toggleOverride = () => {
+    setOverrideReveal((prev) => {
+      const next = !prev;
+      try {
+        if (next) localStorage.setItem('designova_preview_unlocked', '1');
+        else localStorage.removeItem('designova_preview_unlocked');
+      } catch {}
+      return next;
+    });
+  };
+
+  const remaining = Math.max(0, START - now);
+  const parts = splitDuration(remaining);
 
   return (
     <Section
@@ -544,8 +779,36 @@ export default function Tracks({ stage, index }) {
       eyebrow="Tracks // Choose your problem space"
       title="Design tracks"
       provisional={!confirmed.tracks}
-      intro="Select a track to launch its problem statements queue. Explore the challenges, study the deliverables, and register your team."
+      intro={
+        isRevealed
+          ? "The countdown has completed and official challenge statements are now decrypted. Select a track to explore the problem statements, study constraints, and copy your briefs."
+          : `Problem statements are classified under Level 5 security protocol until event ignition (${event.dateLabel}, ${event.timeLabel.split('–')[0].trim()} IST). All statements reveal automatically when the countdown reaches zero.`
+      }
     >
+      {/* Live Ignition Countdown Telemetry Bar */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#090c14] px-4 py-2.5 font-mono text-xs">
+        <div className="flex items-center gap-2.5">
+          <span className={`inline-block h-2.5 w-2.5 rounded-full ${isRevealed ? 'bg-gamma shadow-[0_0_10px_#39ff14] animate-pulse' : 'bg-amber-400 shadow-[0_0_10px_#f59e0b] animate-ping'}`} />
+          <span className="font-bold text-white uppercase tracking-wider">
+            {isRevealed ? 'DECRYPTION STATUS: ONLINE // STATEMENTS REVEALED' : 'DECRYPTION STATUS: CLASSIFIED // COUNTDOWN ACTIVE'}
+          </span>
+          {!isRevealed && (
+            <span className="text-amber-300 font-bold tabular-nums">
+              [{parts.days > 0 ? `${parts.days}d ` : ''}{String(parts.hours).padStart(2, '0')}h {String(parts.minutes).padStart(2, '0')}m {String(parts.seconds).padStart(2, '0')}s to ignition]
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={toggleOverride}
+          className="rounded border border-white/20 bg-white/5 px-3 py-1 text-[0.7rem] uppercase tracking-wider text-muted hover:border-gamma hover:text-gamma transition-colors cursor-pointer"
+          title="Toggle preview of problem statements ahead of the official event countdown"
+        >
+          {overrideReveal ? '🔒 Re-lock Countdown' : '⚡ Organizer / Dev Preview'}
+        </button>
+      </div>
+
       <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {tracks.map((t, i) => (
           <TrackCard
@@ -554,6 +817,8 @@ export default function Tracks({ stage, index }) {
             i={i}
             stage={stage}
             onSelect={(selected) => setSelectedTrack(selected)}
+            isRevealed={isRevealed}
+            now={now}
           />
         ))}
       </ul>
@@ -565,6 +830,10 @@ export default function Tracks({ stage, index }) {
             track={selectedTrack}
             stage={stage}
             onClose={() => setSelectedTrack(null)}
+            isRevealed={isRevealed}
+            now={now}
+            onToggleOverride={toggleOverride}
+            overrideReveal={overrideReveal}
           />
         )}
       </AnimatePresence>
